@@ -2,10 +2,11 @@
 module poll::poll_tests;
 //use poll::poll;
 //use sui::table;
+use std::debug::print;
 use sui::test_scenario as ts;
 
-///Constances
-const SYSTEM_ADDRESS: address = @0x1;
+///Constants
+//const SYSTEM_ADDRESS: address = @0x1;
 const User1: address = @0x2;
 
 const EExpectedFailure: u64 = 6;
@@ -18,5 +19,6 @@ fun test_poll_fail() {
 
 #[test, expected_failure(abort_code = EExpectedFailure)]
 fun test_create_poll(){
-	abort 6;
+	//print(&User1);
+	abort 6
 }

@@ -6,13 +6,13 @@ use sui::package::{Self, Publisher};
 
 //package One time witness
 public struct POLL has drop ()
-
+#[allow(unused_field)]
 public struct PollRegistery has key{
 	id: UID,
 	owner: address,
 	polls: table::Table<u64, Poll>,	
 }
-
+#[allow(unused_field)]
 public struct Poll has key, store{
 	id: UID,
 	name: String,
@@ -23,7 +23,7 @@ public struct Poll has key, store{
 	votes: table::Table<u64, u64>,
 	voters: table::Table<address, u64>,
 }
-
+#[allow(unused_field)]
 public struct VoteReceipt has key {
 	id: UID,
 	poll_id: ID,
@@ -33,38 +33,52 @@ public struct VoteReceipt has key {
 
 //hot potatoes
 public struct CreatePollRequest {
-	//fields
+	//fields 
 }
 
 ///functions
 fun init(otw: POLL, ctx: &mut TxContext){
-	let publisher: Publisher = package::claim(otw, ctx);
-	
-	transfer::public_transfer(publisher, ctx.sender())
+	package::claim_and_keep(otw, ctx)
 }
 
-public fun create_poll(name: String, ctx: &mut TxContext) {
-	abort 0;
+public fun create_CreatePollRequest(): CreatePollRequest{
+	CreatePollRequest {}
 }
 
-public fun vote_on_poll(ctx: &mut TxContext){
-	abort 0;
+public fun create_poll(_createRequest: CreatePollRequest, _ctx: &mut TxContext) {
+	abort 0
+}
+
+public fun vote_on_poll(_ctx: &mut TxContext){
+	abort 0
 }
 
 #[test_only]
 use sui::test_scenario as ts;
+#[test_only]
+use std::debug::print;
 
 #[test_only]
-const Admin: address = @0x3;
+const Admin: address = @0xBAB434;
+
+//test functions
+#[test_only]
+fun init_for_testing(ctx: &mut TxContext){
+	init(POLL(), ctx)
+}
 
 #[test]
 fun test_init(){
 	let mut scenario = ts::begin(Admin);
-	let poll: POLL = POLL();
-	
 	{
-		init(poll, scenario.ctx())
+		init_for_testing(scenario.ctx());
 	};
+	scenario.next_tx(Admin);
+	print(&scenario);
+	
+	let p = ts::ta
+	
+	assert!(scenario.has_most_recent_for_sender<Publisher>(), 1);
 	
 	scenario.end();
 }
