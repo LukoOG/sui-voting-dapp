@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rankiee - Voting on the Sui Blockchain",
+  title: "SuiVS - Voting on the Sui Blockchain", //or Rankiee
   description: "A voting poll built on the sui blockchain",
 };
 

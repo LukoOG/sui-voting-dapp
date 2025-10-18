@@ -18,7 +18,7 @@ export default function Navbar() {
               </div>
               <div>
                 <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                  Rankiee
+                  SuiVS
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   Vote for your favorites on Sui

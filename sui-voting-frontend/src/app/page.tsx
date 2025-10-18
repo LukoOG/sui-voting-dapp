@@ -5,17 +5,64 @@ import Image from "next/image";
 
 export default function Hero() {
 	const trendingPolls = [
-	  { id: 1, title: "Best DeFi Protocol on Sui?", votes: 12847, url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&amp;h=300&amp;fit=crop"},
-	  { id: 2, title: "Favorite NFT Collection", votes: 9521, url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&amp;h=300&amp;fit=crop"  },
-	  { id: 3, title: "Most Anticipated Sui Launch", votes: 8394, url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&amp;h=300&amp;fit=crop"  },
-	  { id: 4, title: "Top Gaming dApp", votes: 7203, url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&amp;h=300&amp;fit=crop"  },
-	  { id: 5, title: "Community Choice Awards", votes: 6815, url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&amp;h=300&amp;fit=crop"  },
-	  { id: 6, title: "Best Sui Wallet", votes: 5492, url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&amp;h=300&amp;fit=crop"  },
+	  { 
+		id: 1, 
+		title: "Best DeFi Protocol on Sui?", 
+		votes: 12847,
+		image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 2, 
+		title: "Favorite NFT Collection", 
+		votes: 9521,
+		image: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 3, 
+		title: "Most Anticipated Sui Launch", 
+		votes: 8394,
+		image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 4, 
+		title: "Top Gaming dApp", 
+		votes: 7203,
+		image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 5, 
+		title: "Community Choice Awards", 
+		votes: 6815,
+		image: "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 6, 
+		title: "Best Sui Wallet", 
+		votes: 5492,
+		image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 7, 
+		title: "Hottest Meme Coin", 
+		votes: 4928,
+		image: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 8, 
+		title: "Best Developer Tool", 
+		votes: 3847,
+		image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop"
+	  },
+	  { 
+		id: 9, 
+		title: "Most Innovative Project", 
+		votes: 3291,
+		image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop"
+	  },
 	];
 
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center space-y-12">
-      {/* Headline + Subtext */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -68,7 +115,7 @@ export default function Hero() {
                 className="p-6 bg-card-bg border border-border rounded-xl shadow-sm cursor-pointer hover:shadow-lg hover:border-accent/50 transition-all group"
               >
 				<div className="relative h-48 overflow-hidden">
-					<img alt="" src={poll.url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+					<img alt="" src={poll.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
 					<div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
 				</div>
 				
