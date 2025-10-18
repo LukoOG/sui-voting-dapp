@@ -38,7 +38,7 @@ public struct CreatePollRequest {
 
 ///functions
 fun init(otw: POLL, ctx: &mut TxContext){
-	let publisher: Publisher = package::claim_and_keep(otw, ctx);
+	let publisher: Publisher = package::claim(otw, ctx);
 	
 	transfer::public_transfer(publisher, ctx.sender())
 }
