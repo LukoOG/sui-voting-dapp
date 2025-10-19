@@ -91,8 +91,8 @@ public fun createCreatePollRequest(
 	let len: u64 = option_names.length();
 	let mut i: u64 = 0;
 	while (i < len) {
-		let image_url = if(option_images.length() < i) { *option_images.borrow(i) } else { option::none<String>() };
-		let caption = if(option_captions.length() < i) { *option_captions.borrow(i)  } else { option::none<String>() };
+		let image_url = if(i < option_images.length()) { *option_images.borrow(i) } else { option::none<String>() };
+		let caption = if(i < option_captions.length()) { *option_captions.borrow(i)  } else { option::none<String>() };
 		let option_name = *option_names.borrow(i);
 		let option = createPollOption(&i, option_name, image_url, caption);
 		vector::push_back(&mut poll_options, option);		
