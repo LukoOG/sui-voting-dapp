@@ -3,9 +3,11 @@ module poll::poll;
 use std::string::{String};
 use sui::table;
 use sui::package::{Self, Publisher};
-
+use sui::clock::Clock;
 
 const EInvalidNoOfOptions: u64 = 12;
+const EUnequalLength :u64 = 13;
+
 //package One time witness
 public struct POLL has drop ()
 
@@ -20,7 +22,7 @@ public struct PollRegistery has key{
 public struct Poll has key, store{
 	id: UID,
 	title: String,
-	description: option<String>,
+	description: option::Option<String>,
 	creator: address,
 	is_active: bool,
 	start_time: u64,
@@ -31,7 +33,7 @@ public struct Poll has key, store{
 }
 
 #[allow(unused_field)]
-public struct PollOption has store {
+public struct PollOption has store, drop {
     id: u64,
     name: String,
     image_url: Option<String>,
@@ -47,7 +49,7 @@ public struct VoteReceipt has key {
 }
 
 //hot potatoes
-public struct CreatePollRequest {
+public struct CreatePollRequest has drop {
 	title: String,
 	description: Option<String>,
 	duration: u64,
@@ -59,30 +61,45 @@ fun init(otw: POLL, ctx: &mut TxContext){
 	package::claim_and_keep(otw, ctx)
 }
 
-fun createPollOption(id: &u64, name:String, image_url:option<String>, caption:option): PollOption{
-	ass
-	PollOption { *id, name }
+//helpers
+
+fun createPollOption(id: &u64, name:String, image_url:option::Option<String>, caption:option::Option<String>): PollOption{
+	let id = *id;
+	PollOption { id, name, image_url, caption }
 }
 
-public fun create_CreatePollRequest(
+fun set_duration(d: u64, clock: &Clock): u64{
+	clock.timestamp_ms() + d
+}
+
+//tx functions
+
+public fun createCreatePollRequest(
 	title: String, 
-	desc: String, 
+	desc: option::Option<String>, 
 	duration: u64,
 	option_names: vector<String>,
     option_images: vector<Option<String>>,
     option_captions: vector<Option<String>>,
+	clock: &Clock,
 	ctx: &mut TxContext
 ): CreatePollRequest{
 	assert!(option_names.length() > 2, EInvalidNoOfOptions);
+	if(!option_images.is_empty()){ assert!(option_images.length() == option_names.length(), EUnequalLength); };
 	
 	let mut poll_options: vector<PollOption> = vector::empty<PollOption>();
 	let len: u64 = option_names.length();
-	let mut i = 0;
-	while(i<len){
-		let option = createPollOption(&i)
+	let mut i: u64 = 0;
+	while (i < len) {
+		let image_url = if(option_images.length() < i) { *option_images.borrow(i) } else { option::none<String>() };
+		let caption = if(option_captions.length() < i) { *option_captions.borrow(i)  } else { option::none<String>() };
+		let option_name = *option_names.borrow(i);
+		let option = createPollOption(&i, option_name, image_url, caption);
+		vector::push_back(&mut poll_options, option);		
+		i = i + 1;
 	};
 	
-	CreatePollRequest {  }
+	CreatePollRequest { title, description: desc, duration: set_duration(duration, clock), options: poll_options }
 }
 
 public fun create_poll(registery: &mut PollRegistery, createRequest: CreatePollRequest, ctx: &mut TxContext) {
