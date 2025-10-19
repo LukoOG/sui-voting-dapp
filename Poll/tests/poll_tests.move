@@ -5,7 +5,7 @@ use poll::poll;
 //use sui::table;
 use sui::clock::{Self, Clock};
 use sui::test_scenario as ts;
-//use std::debug::print;
+use std::debug::print;
 use std::string::String;
 
 const User1: address = @0x2;
@@ -47,6 +47,7 @@ fun test_create_poll_request(){
 		scenario.ctx()
 	);
 	clock.destroy_for_testing();
+	print(&create_poll_request); //for human crosschecking
 	
 	scenario.end();
 }
