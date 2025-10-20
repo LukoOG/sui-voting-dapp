@@ -1,7 +1,7 @@
 #[test_only, allow(unused_const)]
 module poll::poll_tests;
 
-use poll::poll;
+use poll::{version, poll};
 //use sui::table;
 use sui::clock::{Self, Clock};
 use sui::test_scenario as ts;
@@ -26,6 +26,7 @@ fun test_create_poll_request(){
 	let clock = clock::create_for_testing(scenario.ctx());
 	clock.share_for_testing();
 	poll::create_poll_registery_for_testing(scenario.ctx());
+	version::create_version_for_testing(scenario.ctx());
 	
 	scenario.next_tx(User1);
 	
@@ -39,8 +40,10 @@ fun test_create_poll_request(){
 	
 	let clock = scenario.take_shared<Clock>();
 	let mut registery = scenario.take_shared<poll::PollRegistery>();
+	let version = scenario.take_from_sender<version::Version>();
 	
 	let create_poll_request = poll::createCreatePollRequest(
+		&version,
 		title,
 		description,
 		duration,
@@ -67,10 +70,11 @@ fun test_create_poll_request(){
 	assert!(description.extract() == b"This poll is to test the smart contract".to_string(), EIncorrectPollField);
 	
 	ts::return_shared(registery);
+	ts::return_to_sender(&scenario, version);
 	clock.destroy_for_testing();
 	poll::destroy_poll(poll);
 	
-	print(&b"Test passed".to_string()); //suppress unused print warning
+	print(&b"create poll request test passed".to_string()); //suppress unused print warning
 	
 	scenario.end();
 }

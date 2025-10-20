@@ -1,5 +1,6 @@
 module poll::poll;
 
+use poll::version;
 use std::string::{String};
 use sui::table;
 use sui::package::{Self, Publisher};
@@ -89,6 +90,7 @@ fun set_duration(d: u64, clock: &Clock): u64{
 //tx functions
 
 public fun createCreatePollRequest(
+	version: &poll::version::Version,
 	title: String, 
 	desc: option::Option<String>, 
 	duration: u64,
@@ -97,6 +99,7 @@ public fun createCreatePollRequest(
     option_captions: vector<Option<String>>,
 	_ctx: &mut TxContext
 ): CreatePollRequest{
+	poll::version::check_is_valid(version);
 	assert!(option_names.length() > 2, EInvalidNoOfOptions);
 	if(!option_images.is_empty()){ assert!(option_images.length() == option_names.length(), EUnequalLength); };
 	
@@ -115,6 +118,7 @@ public fun createCreatePollRequest(
 	CreatePollRequest { title, description: desc, duration, options: poll_options }
 }
 
+//this will fail if the create hot potato constructor didn't succeed
 public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
 	//assert!();
 	let CreatePollRequest { title, description, duration, options } = createPollRequest;
@@ -141,11 +145,11 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	poll
 }
 
-public fun vote_on_poll(_ctx: &mut TxContext){
+entry fun vote_on_poll(_ctx: &mut TxContext){
 	abort 0
 }
 
-public fun close_poll(_ctx: &mut TxContext){
+entry fun close_poll(_ctx: &mut TxContext){
 	abort 0
 }
 
