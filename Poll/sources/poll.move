@@ -12,13 +12,20 @@ const EUnequalLength :u64 = 13;
 public struct POLL has drop ()
 
 #[allow(unused_field)]
-public struct PollRegistery has key{
+public struct AnonVoteCap has key {
 	id: UID,
 	owner: address,
-	polls: table::Table<u64, Poll>,	
 }
 
 #[allow(unused_field)]
+public struct PollRegistery has key{
+	id: UID,
+	owner: address,
+	polls: table::Table<u64, Poll>, //poll index → Poll
+	next_poll_id: u64;
+}
+
+
 public struct Poll has key, store{
 	id: UID,
 	title: String,
@@ -28,11 +35,12 @@ public struct Poll has key, store{
 	start_time: u64,
 	close_time: u64,
 	options: vector<PollOption>,
-	votes: table::Table<u64, u64>, //poll option to number of votes
-	voters: table::Table<address, u64>,
+	votes: table::Table<u64, u64>, /option index → voter count
+	voters: table::Table<address, u64>, //web3 voters address → option index
+	anon_votes: table::Table<u64, u64>, //anonymous voters → option index
 }
 
-#[allow(unused_field)]
+
 public struct PollOption has store, drop {
     id: u64,
     name: String,
@@ -48,8 +56,11 @@ public struct VoteReceipt has key {
 	option_index: u64,
 }
 
+//events
+public struct PollCreated {}
+
 //hot potatoes
-public struct CreatePollRequest has drop {
+public struct CreatePollRequest {
 	title: String,
 	description: Option<String>,
 	duration: u64,
@@ -58,7 +69,10 @@ public struct CreatePollRequest has drop {
 
 ///functions
 fun init(otw: POLL, ctx: &mut TxContext){
-	package::claim_and_keep(otw, ctx)
+	package::claim_and_keep(otw, ctx);
+	
+	let registery = PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, Poll>(), next_poll_id: 0 };
+	transfer::share_object(registery)
 }
 
 //helpers
@@ -99,11 +113,31 @@ public fun createCreatePollRequest(
 		i = i + 1;
 	};
 	
-	CreatePollRequest { title, description: desc, duration: set_duration(duration, clock), options: poll_options }
+	CreatePollRequest { title, description: desc, duration, options: poll_options }
 }
 
-public fun create_poll(registery: &mut PollRegistery, createRequest: CreatePollRequest, ctx: &mut TxContext) {
-	abort 0
+public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext) {
+	//assert!();
+	let CreatePollRequest { title, description, duration, options } = createPollRequest;
+
+
+	let poll = Poll { 
+						id: object::new(ctx), 
+						title, description, 
+						creator: ctx.sender(), 
+						is_active: true, 
+						start_time: clock.timestamp_ms(), 
+						close_time: set_duration(duration, &clock),
+						options,
+						votes: table::new<u64, u64>(),
+						voters: table::new<address, u64>(),
+						anon_voters: table::new<u64, u64>(),
+					};
+	
+	table::add(registery, registery.next_poll_id, poll);
+	registery.next_poll_id = registery.next_poll_id + 1;
+	
+	poll
 }
 
 public fun vote_on_poll(_ctx: &mut TxContext){
@@ -124,6 +158,11 @@ fun init_for_testing(ctx: &mut TxContext){
 	init(POLL(), ctx)
 }
 
+#[test_only}
+public(package) fun create_poll_registery_for_testing(){
+	
+}
+
 #[test]
 fun test_init(){
 	let mut scenario = ts::begin(Admin);
@@ -131,9 +170,9 @@ fun test_init(){
 		init_for_testing(scenario.ctx());
 	};
 	scenario.next_tx(Admin);
-	print(&scenario);
 	
 	assert!(scenario.has_most_recent_for_sender<Publisher>(), 1);
+	assert!(scenario.has_most_recent_shared<PollRegistery>(), 1);
 	
 	scenario.end();
 }

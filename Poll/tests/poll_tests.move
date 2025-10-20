@@ -24,6 +24,7 @@ fun test_create_poll_request(){
 	
 	let clock = clock::create_for_testing(scenario.ctx());
 	clock.share_for_testing();
+	poll::create_poll_registery_for_testing();
 	
 	scenario.next_tx(User1);
 	
@@ -46,6 +47,8 @@ fun test_create_poll_request(){
 		&clock,
 		scenario.ctx()
 	);
+	
+	let poll: poll::Poll = poll::create_poll(registery, create_poll_request, &clock, scenario.ctx());
 	clock.destroy_for_testing();
 	print(&create_poll_request); //for human crosschecking
 	
