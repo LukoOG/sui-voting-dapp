@@ -12,6 +12,7 @@ const User1: address = @0x2;
 
 const EExpectedFailure: u64 = 6;
 const ENotImplemented: u64 = 0;
+const EIncorrectPollField: u64 = 0;
 
 #[test, expected_failure(abort_code = ::poll::poll_tests::ENotImplemented)]
 fun test_poll_fail() {
@@ -49,14 +50,27 @@ fun test_create_poll_request(){
 		scenario.ctx()
 	);
 	
-	print(&create_poll_request); //for human crosschecking
-	let poll: poll::Poll = poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
+	//print(&create_poll_request); //for human crosschecking
+	let mut poll: poll::Poll = poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
 	
-	assert!( poll::poll_id(&poll) == 0, 90);
+	let ( id, title, description, creator, start, close, is_active ) = poll::poll_fields(&mut poll);
+	
+	assert!( id == 0, EIncorrectPollField );
+	assert!( title == b"Test Poll".to_string(), EIncorrectPollField );
+	assert!( creator == scenario.ctx().sender(), EIncorrectPollField );
+	assert!( start == clock.timestamp_ms(), EIncorrectPollField );
+	assert!( close == duration, EIncorrectPollField );
+	assert!( is_active == true, EIncorrectPollField );
+	
+	//asserting options
+	assert!(description.is_some(), EIncorrectPollField);
+	assert!(description.extract() == b"This poll is to test the smart contract".to_string(), EIncorrectPollField);
 	
 	ts::return_shared(registery);
 	clock.destroy_for_testing();
 	poll::destroy_poll(poll);
+	
+	print(&b"Test passed".to_string()); //suppress unused print warning
 	
 	scenario.end();
 }

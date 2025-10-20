@@ -77,7 +77,6 @@ fun init(otw: POLL, ctx: &mut TxContext){
 }
 
 //helpers
-
 fun createPollOption(id: &u64, name:String, image_url:option::Option<String>, caption:option::Option<String>): PollOption{
 	let id = *id;
 	PollOption { id, name, image_url, caption }
@@ -122,17 +121,17 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 
 
 	let poll = Poll { 
-						id: object::new(ctx),
-						poll_id: registery.next_poll_id,
-						title, description, 
-						creator: ctx.sender(), 
-						is_active: true, 
-						start_time: clock.timestamp_ms(), 
-						close_time: set_duration(duration, clock),
-						options,
-						votes: table::new<u64, u64>(ctx),
-						voters: table::new<address, u64>(ctx),
-						anon_voters: table::new<u64, u64>(ctx),
+				id: object::new(ctx),
+				poll_id: registery.next_poll_id,
+				title, description, 
+				creator: ctx.sender(), 
+				is_active: true, 
+				start_time: clock.timestamp_ms(), 
+				close_time: set_duration(duration, clock),
+				options,
+				votes: table::new<u64, u64>(ctx),
+				voters: table::new<address, u64>(ctx),
+				anon_voters: table::new<u64, u64>(ctx),
 	};
 					
 	let poll_object_id = object::uid_to_inner(&poll.id);	
@@ -146,10 +145,15 @@ public fun vote_on_poll(_ctx: &mut TxContext){
 	abort 0
 }
 
+public fun close_poll(_ctx: &mut TxContext){
+	abort 0
+}
+
 #[test_only]
 use sui::test_scenario as ts;
-#[test_only]
-use std::debug::print;
+
+//#[test_only]
+//use std::debug::print;
 
 #[test_only]
 const Admin: address = @0xBAB434;
@@ -167,6 +171,11 @@ public(package) fun create_poll_registery_for_testing(ctx: &mut TxContext){
 
 #[test_only]
 public(package) fun poll_id(self: &Poll): &u64 { &self.poll_id }
+
+#[test_only]
+public(package) fun poll_fields(self: &mut Poll): (&u64, &String, &mut option::Option<String>, &address, &u64, &u64, &bool) { 
+	(&self.poll_id, &self.title, &mut self.description, &self.creator, &self.start_time, &self.close_time, &self.is_active)
+}
 
 #[test_only]
 public(package) fun destroy_poll(poll: Poll) { 
@@ -187,8 +196,6 @@ fun test_init(){
 	
 	assert!(scenario.has_most_recent_for_sender<Publisher>(), 1);
 	//assert!(scenario.has_most_recent_shared(), 1);
-	
-	print(&scenario);
 	
 	scenario.end();
 }
