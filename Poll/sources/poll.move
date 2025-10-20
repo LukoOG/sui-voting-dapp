@@ -199,7 +199,7 @@ fun test_init(){
 	scenario.next_tx(Admin);
 	
 	assert!(scenario.has_most_recent_for_sender<Publisher>(), 1);
-	//assert!(scenario.has_most_recent_shared(), 1);
+	assert!(ts::has_most_recent_shared<PollRegistery>(), 1);
 	
 	scenario.end();
 }
