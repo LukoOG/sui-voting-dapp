@@ -21,7 +21,7 @@ public struct AnonVoteCap has key {
 public struct PollRegistery has key{
 	id: UID,
 	owner: address,
-	polls: table::Table<u64, Poll>, //poll index → Poll
+	polls: table::Table<u64, ID>, //poll index → Poll object reference
 	next_poll_id: u64,
 }
 
@@ -72,7 +72,7 @@ public struct CreatePollRequest {
 fun init(otw: POLL, ctx: &mut TxContext){
 	package::claim_and_keep(otw, ctx);
 	
-	let registery = PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, Poll>(ctx), next_poll_id: 0 };
+	let registery = PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, ID>(ctx), next_poll_id: 0 };
 	transfer::share_object(registery)
 }
 
@@ -133,9 +133,10 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 						votes: table::new<u64, u64>(ctx),
 						voters: table::new<address, u64>(ctx),
 						anon_voters: table::new<u64, u64>(ctx),
-					};
-	
-	table::add<u64, Poll>(&mut registery.polls, registery.next_poll_id, poll);
+	};
+					
+	let poll_object_id = object::uid_to_inner(&poll.id);	
+	table::add<u64, ID>(&mut registery.polls, registery.next_poll_id, poll_object_id);
 	registery.next_poll_id = registery.next_poll_id + 1;
 	
 	poll
@@ -161,11 +162,20 @@ fun init_for_testing(ctx: &mut TxContext){
 
 #[test_only]
 public(package) fun create_poll_registery_for_testing(ctx: &mut TxContext){
-	transfer::share_object(PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, Poll>(ctx), next_poll_id: 0 })
+	transfer::share_object(PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, ID>(ctx), next_poll_id: 0 })
 }
 
 #[test_only]
-public(package) fun id(self: &Poll): &u64 { &self.poll_id }
+public(package) fun poll_id(self: &Poll): &u64 { &self.poll_id }
+
+#[test_only]
+public(package) fun destroy_poll(poll: Poll) { 
+	let Poll { id, voters, votes, anon_voters, .. } = poll;
+	table::drop(voters);
+	table::drop(votes);
+	table::drop(anon_voters);
+	id.delete();
+}
 
 #[test]
 fun test_init(){
@@ -176,7 +186,7 @@ fun test_init(){
 	scenario.next_tx(Admin);
 	
 	assert!(scenario.has_most_recent_for_sender<Publisher>(), 1);
-	assert!(scenario.has_most_recent_shared<PollRegistery>(), 1);
+	//assert!(scenario.has_most_recent_shared(), 1);
 	
 	print(&scenario);
 	

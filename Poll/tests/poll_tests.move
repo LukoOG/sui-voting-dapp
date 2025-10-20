@@ -37,7 +37,7 @@ fun test_create_poll_request(){
 	let option_captions = vector<option::Option<String>>[option::none()];
 	
 	let clock = scenario.take_shared<Clock>();
-	let registery = scenario.take_shared<poll::PollRegistery>();
+	let mut registery = scenario.take_shared<poll::PollRegistery>();
 	
 	let create_poll_request = poll::createCreatePollRequest(
 		title,
@@ -49,13 +49,14 @@ fun test_create_poll_request(){
 		scenario.ctx()
 	);
 	
+	print(&create_poll_request); //for human crosschecking
 	let poll: poll::Poll = poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
 	
-	assert!( poll::id(&poll) == 0, 90);
+	assert!( poll::poll_id(&poll) == 0, 90);
 	
 	ts::return_shared(registery);
 	clock.destroy_for_testing();
-	print(&create_poll_request); //for human crosschecking
+	poll::destroy_poll(poll);
 	
 	scenario.end();
 }
