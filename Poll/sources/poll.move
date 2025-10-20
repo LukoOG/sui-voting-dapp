@@ -22,12 +22,13 @@ public struct PollRegistery has key{
 	id: UID,
 	owner: address,
 	polls: table::Table<u64, Poll>, //poll index → Poll
-	next_poll_id: u64;
+	next_poll_id: u64,
 }
 
 
 public struct Poll has key, store{
 	id: UID,
+	poll_id: u64, //registery index
 	title: String,
 	description: option::Option<String>,
 	creator: address,
@@ -35,9 +36,9 @@ public struct Poll has key, store{
 	start_time: u64,
 	close_time: u64,
 	options: vector<PollOption>,
-	votes: table::Table<u64, u64>, /option index → voter count
+	votes: table::Table<u64, u64>, //option index → voter count
 	voters: table::Table<address, u64>, //web3 voters address → option index
-	anon_votes: table::Table<u64, u64>, //anonymous voters → option index
+	anon_voters: table::Table<u64, u64>, //anonymous voters → option index
 }
 
 
@@ -71,7 +72,7 @@ public struct CreatePollRequest {
 fun init(otw: POLL, ctx: &mut TxContext){
 	package::claim_and_keep(otw, ctx);
 	
-	let registery = PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, Poll>(), next_poll_id: 0 };
+	let registery = PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, Poll>(ctx), next_poll_id: 0 };
 	transfer::share_object(registery)
 }
 
@@ -95,8 +96,7 @@ public fun createCreatePollRequest(
 	option_names: vector<String>,
     option_images: vector<Option<String>>,
     option_captions: vector<Option<String>>,
-	clock: &Clock,
-	ctx: &mut TxContext
+	_ctx: &mut TxContext
 ): CreatePollRequest{
 	assert!(option_names.length() > 2, EInvalidNoOfOptions);
 	if(!option_images.is_empty()){ assert!(option_images.length() == option_names.length(), EUnequalLength); };
@@ -116,25 +116,26 @@ public fun createCreatePollRequest(
 	CreatePollRequest { title, description: desc, duration, options: poll_options }
 }
 
-public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext) {
+public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
 	//assert!();
 	let CreatePollRequest { title, description, duration, options } = createPollRequest;
 
 
 	let poll = Poll { 
-						id: object::new(ctx), 
+						id: object::new(ctx),
+						poll_id: registery.next_poll_id,
 						title, description, 
 						creator: ctx.sender(), 
 						is_active: true, 
 						start_time: clock.timestamp_ms(), 
-						close_time: set_duration(duration, &clock),
+						close_time: set_duration(duration, clock),
 						options,
-						votes: table::new<u64, u64>(),
-						voters: table::new<address, u64>(),
-						anon_voters: table::new<u64, u64>(),
+						votes: table::new<u64, u64>(ctx),
+						voters: table::new<address, u64>(ctx),
+						anon_voters: table::new<u64, u64>(ctx),
 					};
 	
-	table::add(registery, registery.next_poll_id, poll);
+	table::add<u64, Poll>(&mut registery.polls, registery.next_poll_id, poll);
 	registery.next_poll_id = registery.next_poll_id + 1;
 	
 	poll
@@ -158,10 +159,13 @@ fun init_for_testing(ctx: &mut TxContext){
 	init(POLL(), ctx)
 }
 
-#[test_only}
-public(package) fun create_poll_registery_for_testing(){
-	
+#[test_only]
+public(package) fun create_poll_registery_for_testing(ctx: &mut TxContext){
+	transfer::share_object(PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, Poll>(ctx), next_poll_id: 0 })
 }
+
+#[test_only]
+public(package) fun id(self: &Poll): &u64 { &self.poll_id }
 
 #[test]
 fun test_init(){
@@ -173,6 +177,8 @@ fun test_init(){
 	
 	assert!(scenario.has_most_recent_for_sender<Publisher>(), 1);
 	assert!(scenario.has_most_recent_shared<PollRegistery>(), 1);
+	
+	print(&scenario);
 	
 	scenario.end();
 }

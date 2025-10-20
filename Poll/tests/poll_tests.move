@@ -1,4 +1,4 @@
-#[test_only]
+#[test_only, allow(unused_const)]
 module poll::poll_tests;
 
 use poll::poll;
@@ -24,7 +24,7 @@ fun test_create_poll_request(){
 	
 	let clock = clock::create_for_testing(scenario.ctx());
 	clock.share_for_testing();
-	poll::create_poll_registery_for_testing();
+	poll::create_poll_registery_for_testing(scenario.ctx());
 	
 	scenario.next_tx(User1);
 	
@@ -35,7 +35,9 @@ fun test_create_poll_request(){
 	let option_names = vector<String>[b"12".to_string(), b"23".to_string(), b"34".to_string()];
 	let option_images = vector<option::Option<String>>[option::none(), option::none(), option::none()];
 	let option_captions = vector<option::Option<String>>[option::none()];
+	
 	let clock = scenario.take_shared<Clock>();
+	let registery = scenario.take_shared<poll::PollRegistery>();
 	
 	let create_poll_request = poll::createCreatePollRequest(
 		title,
@@ -44,11 +46,14 @@ fun test_create_poll_request(){
 		option_names,
 		option_images,
 		option_captions,
-		&clock,
 		scenario.ctx()
 	);
 	
-	let poll: poll::Poll = poll::create_poll(registery, create_poll_request, &clock, scenario.ctx());
+	let poll: poll::Poll = poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
+	
+	assert!( poll::id(&poll) == 0, 90);
+	
+	ts::return_shared(registery);
 	clock.destroy_for_testing();
 	print(&create_poll_request); //for human crosschecking
 	
