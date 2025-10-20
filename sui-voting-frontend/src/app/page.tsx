@@ -115,7 +115,7 @@ export default function Hero() {
                 className="p-6 bg-card-bg border border-border rounded-xl shadow-sm cursor-pointer hover:shadow-lg hover:border-accent/50 transition-all group"
               >
 				<div className="relative h-48 overflow-hidden">
-					<img alt="" src={poll.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+					<Image width={1000} height={800} alt="" src={poll.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
 					<div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
 				</div>
 				

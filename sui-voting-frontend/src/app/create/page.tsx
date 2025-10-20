@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -18,7 +19,7 @@ interface PollOption {
 }
 
 const CreatePoll = () => {
-  const navigate = (stuff) => console.log("navigated to: ", stuff) //useNavigate();
+  const navigate = (stuff: string) => console.log("navigated to: ", stuff) //useNavigate();
   const [pollTitle, setPollTitle] = useState("");
   const [pollDescription, setPollDescription] = useState("");
   const [options, setOptions] = useState<PollOption[]>([
@@ -200,7 +201,8 @@ const CreatePoll = () => {
                         />
                         {option.imageUrl && (
                           <div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
-                            <img
+                            <Image
+							width={1000} height={800}
                               src={option.imageUrl}
                               alt={`Option ${index + 1} preview`}
                               className="w-full h-full object-cover"

@@ -1,9 +1,12 @@
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
 interface PollCardProps {
 	title: string
 }
 
 
-export default PollCard({ title }:PollCardProps){
+export default function PollCard({ title }:PollCardProps){
 return (
 		<Card className="bg-[var(--color-surface)] border border-[var(--color-border)] shadow-sm hover:shadow-[var(--shadow-glow)] transition rounded-2xl">
 			<CardContent className="p-4 flex flex-col gap-2">

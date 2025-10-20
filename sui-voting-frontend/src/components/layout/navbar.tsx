@@ -5,7 +5,7 @@ import { Vote, Waves } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 export default function Navbar() {
-  const [connected, setConnected] = useState(false);
+  //const [connected, setConnected] = useState(false);
 
   return (
           <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
