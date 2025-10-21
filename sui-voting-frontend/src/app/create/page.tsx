@@ -187,8 +187,8 @@ const CreatePoll = () => {
                       <div className="space-y-2">
                         <Input
                           placeholder="Enter option name"
-                          value={option.text}
-                          onChange={(e) => updateOption(option.id, "text", e.target.value)}
+                          value={option.name}
+                          onChange={(e) => updateOption(option.id, "name", e.target.value)}
                           className="text-base"
                         />
                       </div>
@@ -200,15 +200,15 @@ const CreatePoll = () => {
                         </div>
                         <Input
                           placeholder="https://example.com/image.jpg"
-                          value={option.imageUrl}
-                          onChange={(e) => updateOption(option.id, "imageUrl", e.target.value)}
+                          value={option.image ?? ""}
+                          onChange={(e) => updateOption(option.id, "image", e.target.value)}
                           className="text-sm"
                         />
-                        {option.imageUrl && (
+                        {option.image && (
                           <div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
                             <Image
 							width={1000} height={800}
-                              src={option.imageUrl}
+                              src={option.image}
                               alt={`Option ${index + 1} preview`}
                               className="w-full h-full object-cover"
                               onError={(e) => {

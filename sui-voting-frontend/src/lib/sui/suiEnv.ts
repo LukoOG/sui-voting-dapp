@@ -8,7 +8,7 @@ interface SuiEnv {
 
 const suiEnv: SuiEnv = {
 	versionObject: process.env.NEXT_PUBLIC_VERSION_ID || "default-version",
-	registeryObject: process.env.NEXT_PUBLIC_REGISTERY_ID,
+	registeryObject: process.env.NEXT_PUBLIC_REGISTERY_ID || "default-registery",
 	publisherObject: process.env.NEXT_PUBLIC_PUBLISHER_ID || "default-publisher-object",
 	packageId: process.env.NEXT_PUBLIC_PACKAGE_ID || "default-package-id",
 };

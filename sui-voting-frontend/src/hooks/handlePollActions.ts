@@ -14,7 +14,7 @@ export const usePollActions = () => {
 	
 	const createPoll =  useMutation({
 		mutationFn: async (args: createPollArgs) => {
-			const tx = createPollTx(args, account.address);
+			const tx = createPollTx(args, account!.address);
 			
 			const result = await signAndExecuteTransaction({ transaction: tx });
 			await suiClient.waitForTransaction({ digest: result.digest });

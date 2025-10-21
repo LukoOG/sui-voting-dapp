@@ -1,9 +1,9 @@
 //Sui helper functions
 import { Transaction } from "@mysten/sui/transactions";
 import suiEnv from "@/lib/sui/suiEnv";
-import { createPollArgs } from "@lib/types"
+import { createPollArgs } from "@/lib/types"
 
-export const createPollTx = async ({ title, description, duration, options }: createPollArgs, address: string): Transaction => {
+export const createPollTx =  ({ title, description, duration, options }: createPollArgs, address: string) => {
 	const tx = new Transaction()
 	
 	const request = tx.moveCall({
@@ -33,5 +33,5 @@ export const createPollTx = async ({ title, description, duration, options }: cr
 	tx.transferObjects([poll], address)
 	
 	tx.setGasBudget(1000000);
-	return await tx.build();
+	return tx
 }
