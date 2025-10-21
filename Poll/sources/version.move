@@ -43,6 +43,10 @@ const Admin: address = @0xBAB434;
 public fun create_version_for_testing(ctx: &mut TxContext) { transfer::transfer( Version{ id: object::new(ctx), v: 1 } ,ctx.sender()) }
 
 #[test_only]
+public fun create_fail_version_for_testing(ctx: &mut TxContext) { transfer::transfer( Version{ id: object::new(ctx), v: 0 } ,ctx.sender()) }
+
+
+#[test_only]
 fun init_for_testing(ctx: &mut TxContext){
 	init(VERSION(), ctx)
 }
