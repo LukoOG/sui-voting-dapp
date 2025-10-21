@@ -11,17 +11,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePollActions } from "@/hooks/handlePollActions";
+import type { Option } from "@/lib/types"
 //import { useNavigate } from "react-router-dom";
-
-interface PollOption {
-  id: string;
-  text: string;
-  imageUrl: string;
-}
 
 const DEFAULT_DURATION: number = 604800000 //1 week
 
-const getDuration():number | null => null 
+const getDuration = ():number | null => null 
+
+//id to help map mutations
+type PollOption = { id: string } & Option;
 
 const CreatePoll = () => {
   const navigate = (_stuff: string) => ("navigetd") //useNavigate();
@@ -42,7 +40,7 @@ const CreatePoll = () => {
 
   const addOption = () => {
     const newId = (Math.max(...options.map(o => parseInt(o.id))) + 1).toString();
-    setOptions([...options, { id: newId, text: "", imageUrl: "" }]);
+    setOptions([...options, { id: newId, name: "", image: "", caption:"" }]);
   };
 
   const removeOption = (id: string) => {
@@ -51,14 +49,15 @@ const CreatePoll = () => {
     }
   };
 
-  const updateOption = (id: string, field: "text" | "imageUrl", value: string) => {
+  const updateOption = (id: string, field: "image" | "name" | "caption", value: string) => {
     setOptions(options.map(option => 
       option.id === id ? { ...option, [field]: value } : option
     ));
   };
 
   const handleCreatePoll = () => {
-    createPoll.mutate({ pollTitle, pollDescription, duration: getDuration() ?? DEFAULT_DURATION, options })
+    createPoll.mutate({ title: pollTitle, description: pollDescription, 
+		duration: getDuration() ?? DEFAULT_DURATION, options })
     console.log({
       pollTitle,
       pollDescription,
