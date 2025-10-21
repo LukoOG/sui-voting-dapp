@@ -112,22 +112,24 @@ export default function Hero() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
                 whileHover={{ scale: 1.03, y: -4 }}
-                className="p-6 bg-card-bg border border-border rounded-xl shadow-sm cursor-pointer hover:shadow-lg hover:border-accent/50 transition-all group"
+                className="bg-card-bg border border-border rounded-xl shadow-sm cursor-pointer hover:shadow-lg hover:border-accent/50 transition-all group"
               >
 				<div className="relative h-48 overflow-hidden">
 					<Image width={1000} height={800} alt="" src={poll.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
 					<div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent"></div>
 				</div>
 				
-                <h4 className="text-foreground font-medium mb-2 group-hover:text-accent transition-colors">
-                  {poll.title}
-                </h4>
-                <div className="flex items-center gap-2">
-                  <Vote className="w-4 h-4 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    {poll.votes.toLocaleString()} votes
-                  </p>
-                </div>
+				<div className="p-6">
+					<h4 className="text-foreground font-medium mb-2 group-hover:text-accent transition-colors">
+					  {poll.title}
+					</h4>
+					<div className="flex items-center gap-2">
+					  <Vote className="w-4 h-4 text-muted-foreground" />
+					  <p className="text-sm text-muted-foreground">
+						{poll.votes.toLocaleString()} votes
+					  </p>
+					</div>
+				</div>
               </motion.div>
             ))}
         </div>
