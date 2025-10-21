@@ -1,12 +1,16 @@
 interface SuiEnv {
   versionObject: string;
+  registeryObject: string;
   publisherObject: string;
   packageId: string;
 }
 
 
-export default const suiEnv: SuiEnv = {
-	version: process.env.NEXT_PUBLIC_SUI_VERSION || "default-version",
-	publisherObject: process.env.NEXT_PUBLIC_PUBLISHER_OBJECT || "default-publisher-object",
+const suiEnv: SuiEnv = {
+	versionObject: process.env.NEXT_PUBLIC_VERSION_ID || "default-version",
+	registeryObject: process.env.NEXT_PUBLIC_REGISTERY_ID,
+	publisherObject: process.env.NEXT_PUBLIC_PUBLISHER_ID || "default-publisher-object",
 	packageId: process.env.NEXT_PUBLIC_PACKAGE_ID || "default-package-id",
-}
+};
+
+export default suiEnv

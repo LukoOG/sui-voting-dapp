@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePollActions } from "@/hooks/handlePollActions";
 //import { useNavigate } from "react-router-dom";
 
 interface PollOption {
@@ -18,13 +19,18 @@ interface PollOption {
   imageUrl: string;
 }
 
+const DEFAULT_DURATION: number = 604800000 //1 week
+
+const getDuration():number | null => null 
+
 const CreatePoll = () => {
-  const navigate = (stuff: string) => console.log("navigated to: ", stuff) //useNavigate();
+  const navigate = (_stuff: string) => ("navigetd") //useNavigate();
+  const { createPoll } = usePollActions();
   const [pollTitle, setPollTitle] = useState("");
   const [pollDescription, setPollDescription] = useState("");
   const [options, setOptions] = useState<PollOption[]>([
-    { id: "1", text: "", imageUrl: "" },
-    { id: "2", text: "", imageUrl: "" },
+    { id: "1", name: "", image: "", caption: "" },
+    { id: "2", name: "", image: "", caption: "" },
   ]);
 
   // Settings
@@ -52,7 +58,7 @@ const CreatePoll = () => {
   };
 
   const handleCreatePoll = () => {
-    // TODO: Implement poll creation logic
+    createPoll.mutate({ pollTitle, pollDescription, duration: getDuration() ?? DEFAULT_DURATION, options })
     console.log({
       pollTitle,
       pollDescription,
