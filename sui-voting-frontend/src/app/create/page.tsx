@@ -94,7 +94,7 @@ const CreatePoll = () => {
 
           <Button 
             onClick={handleCreatePoll}
-            className="bg-accent hover:bg-accent-hover text-white"
+            className="cursor-pointer bg-accent hover:bg-accent-hover text-white"
           >
             Publish Poll
           </Button>

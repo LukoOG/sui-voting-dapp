@@ -5,7 +5,7 @@ use poll::{version, poll};
 //use sui::table;
 use sui::clock::{Self, Clock};
 use sui::test_scenario as ts;
-//use std::debug::print;
+use std::debug::print;
 use std::string::String;
 
 const User1: address = @0x2;
@@ -69,12 +69,13 @@ fun test_create_poll_request(){
 	assert!(description.is_some(), EIncorrectPollField);
 	assert!(description.extract() == b"This poll is to test the smart contract".to_string(), EIncorrectPollField);
 	
+	print(&object::id(&poll));
+	print(&object::uid_to_inner(poll::poll_id(&poll)));
+	
 	ts::return_shared(registery);
 	ts::return_to_sender(&scenario, version);
 	clock.destroy_for_testing();
 	poll::destroy_poll(poll);
-	
-	//print(&b"create poll request test passed".to_string()); //suppress unused print warning
 	
 	scenario.end();
 }

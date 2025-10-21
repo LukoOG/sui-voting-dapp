@@ -174,7 +174,7 @@ public(package) fun create_poll_registery_for_testing(ctx: &mut TxContext){
 }
 
 #[test_only]
-public(package) fun poll_id(self: &Poll): &u64 { &self.poll_id }
+public(package) fun poll_id(self: &Poll): &UID { &self.id }
 
 #[test_only]
 public(package) fun poll_fields(self: &mut Poll): (&u64, &String, &mut option::Option<String>, &address, &u64, &u64, &bool) { 
