@@ -2,7 +2,7 @@ module poll::poll;
 
 use std::string::{String};
 use sui::table;
-use sui::package::{Self};
+use sui::package;
 use sui::clock::Clock;
 
 const EInvalidNoOfOptions: u64 = 12;
@@ -102,7 +102,7 @@ public fun createCreatePollRequest(
 	_ctx: &mut TxContext
 ): CreatePollRequest{
 	poll::version::check_is_valid(version);
-	assert!(option_names.length() > 2, EInvalidNoOfOptions);
+	assert!(option_names.length() > 1, EInvalidNoOfOptions);
 	if(!option_images.is_empty()){ assert!(option_images.length() == option_names.length(), EUnequalLength); };
 	
 	let mut poll_options: vector<PollOption> = vector::empty<PollOption>();
@@ -154,6 +154,9 @@ entry fun vote_on_poll(_ctx: &mut TxContext){
 entry fun close_poll(_ctx: &mut TxContext){
 	abort 0
 }
+
+#[test_only]
+use sui::package::Publisher;
 
 #[test_only]
 use sui::test_scenario as ts;

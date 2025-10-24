@@ -35,8 +35,8 @@ fun test_create_poll_request(){
 	let description = option::some<String>(b"This poll is to test the smart contract".to_string());
 	let thumbnail_url = b"This poll is to test the smart contract".to_string();
 	let duration: u64 = 34;
-	let option_names = vector<String>[b"12".to_string(), b"23".to_string(), b"34".to_string()];
-	let option_images = vector<option::Option<String>>[option::none(), option::none(), option::none()];
+	let option_names = vector<String>[b"12".to_string(), b"23".to_string()];
+	let option_images = vector<option::Option<String>>[option::none(), option::none()];
 	let option_captions = vector<option::Option<String>>[option::none()];
 	
 	let clock = scenario.take_shared<Clock>();

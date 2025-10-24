@@ -1,8 +1,8 @@
 [package]
 name = "Poll"
 edition = "2024.beta" # edition = "legacy" to use legacy (pre-2024) Move
-version = "0.0.0"
-#published-at = "0x1aef64294de44d2c9bca50fc4eeecc8c9627151bd8a1b64c98ca6c2d431fc790"
+version = "0.0.1"
+published-at = "0xea6178cf7e4a2fed21828477b58827f47a08c36668cedd4b55ad309b03bc7b92"
 # license = ""           # e.g., "MIT", "GPL", "Apache 2.0"
 # authors = ["..."]      # e.g., ["Joe Smith (joesmith@noemail.com)", "John Snow (johnsnow@noemail.com)"]
 

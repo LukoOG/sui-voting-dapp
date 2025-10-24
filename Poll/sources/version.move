@@ -3,7 +3,7 @@ module poll::version;
 use sui::package::{Self, Publisher};
 
 ///Consts
-const PACKAGE_VERSION: u64 = 2; //always update before running cli upgrade command
+const PACKAGE_VERSION: u64 = 3; //always update before running cli upgrade command
 
 const EIncompatibleVersion: u64 = 11;
 
