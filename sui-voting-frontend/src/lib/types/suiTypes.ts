@@ -7,6 +7,7 @@ export type Option = {
 export interface createPollArgs { 
 	title: string,
 	description: string | null,
+	thumbnail: string,
 	duration: number,
 	options: Option[],
 };

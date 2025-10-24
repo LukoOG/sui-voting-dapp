@@ -69,14 +69,14 @@ export default function Hero() {
         transition={{ duration: 0.5 }}
       >
         <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-[var(--text)]">
-          Vote. Rank. Decide — All on{" "}
+          Vote. Rank. Decide All on{" "}
           <span className="text-[var(--accent)]">Sui</span>.
         </h2>
 
         <p className="text-[var(--text-muted)] max-w-lg mx-auto mb-8 leading-relaxed">
           Join the fun. Cast your vote or create a poll instantly.
           <br className="hidden sm:block" /> 
-          No wallet? No problem — vote anonymously in seconds.
+          No wallet? No problem vote anonymously in seconds.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

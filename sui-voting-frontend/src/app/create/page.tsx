@@ -1,8 +1,11 @@
 "use client";
 import Image from "next/image";
 
+import { toast } from "sonner";
+
 import { useState } from "react";
 import { motion } from "framer-motion";
+
 import { Plus, X, Image as ImageIcon, Settings, Waves, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { usePollActions } from "@/hooks/handlePollActions";
 import type { Option } from "@/lib/types"
 //import { useNavigate } from "react-router-dom";
@@ -55,22 +59,36 @@ const CreatePoll = () => {
     ));
   };
 
-  const handleCreatePoll = () => {
-    createPoll.mutate({ title: pollTitle, description: pollDescription, 
-		duration: getDuration() ?? DEFAULT_DURATION, options })
-    console.log({
-      pollTitle,
-      pollDescription,
-      options,
-      settings: {
-        weightedVotes,
-        multipleChoice,
-        pollDuration,
-        requireWallet,
-        showResults,
-      }
-    });
-  };
+	const handleCreatePoll = () => {
+	  const errors: string[] = [];
+	  
+	  toast("Error");
+	  
+	  console.log("create");
+
+	  
+
+	  const durationMap: Record<string, number> = {
+		"1": 86400000,
+		"3": 3 * 86400000,
+		"7": 7 * 86400000,
+		"14": 14 * 86400000,
+		"30": 30 * 86400000,
+		"0": 0
+	  };
+	  const duration = durationMap[pollDuration] ?? DEFAULT_DURATION;
+
+	  createPoll.mutateAsync(
+		{
+		  title: pollTitle.trim(),
+		  description: pollDescription.trim(),
+		  thumbnail: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
+		  duration,
+		  options,
+		}
+	  );
+	};
+
 
   return (
     <div className="min-h-screen bg-background">

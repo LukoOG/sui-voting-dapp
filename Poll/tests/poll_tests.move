@@ -33,6 +33,7 @@ fun test_create_poll_request(){
 	//variables
 	let title = b"Test Poll".to_string();
 	let description = option::some<String>(b"This poll is to test the smart contract".to_string());
+	let thumbnail_url = b"This poll is to test the smart contract".to_string();
 	let duration: u64 = 34;
 	let option_names = vector<String>[b"12".to_string(), b"23".to_string(), b"34".to_string()];
 	let option_images = vector<option::Option<String>>[option::none(), option::none(), option::none()];
@@ -40,12 +41,13 @@ fun test_create_poll_request(){
 	
 	let clock = scenario.take_shared<Clock>();
 	let mut registery = scenario.take_shared<poll::PollRegistery>();
-	let version = scenario.take_from_sender<version::Version>();
+	let version = scenario.take_shared<version::Version>();
 	
 	let create_poll_request = poll::createCreatePollRequest(
 		&version,
 		title,
 		description,
+		thumbnail_url,
 		duration,
 		option_names,
 		option_images,
@@ -73,7 +75,7 @@ fun test_create_poll_request(){
 	print(&object::uid_to_inner(poll::poll_id(&poll)));
 	
 	ts::return_shared(registery);
-	ts::return_to_sender(&scenario, version);
+	ts::return_shared(version);
 	clock.destroy_for_testing();
 	poll::destroy_poll(poll);
 	
@@ -95,11 +97,12 @@ fun test_version_check(){
 	
 	let clock = scenario.take_shared<Clock>();
 	let mut registery = scenario.take_shared<poll::PollRegistery>();
-	let version = scenario.take_from_sender<version::Version>();
+	let version = scenario.take_shared<version::Version>();
 	
 	//variables
 	let title = b"Test Poll".to_string();
 	let description = option::some<String>(b"This poll is to test the smart contract".to_string());
+	let thumbnail_url = b"This poll is to test the smart contract".to_string();
 	let duration: u64 = 34;
 	let option_names = vector<String>[b"12".to_string(), b"23".to_string(), b"34".to_string()];
 	let option_images = vector<option::Option<String>>[option::none(), option::none(), option::none()];
@@ -109,6 +112,7 @@ fun test_version_check(){
 		&version,
 		title,
 		description,
+		thumbnail_url,
 		duration,
 		option_names,
 		option_images,
@@ -120,7 +124,7 @@ fun test_version_check(){
 	let poll: poll::Poll = poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
 	
 	ts::return_shared(registery);
-	ts::return_to_sender(&scenario, version);
+	ts::return_shared(version);
 	clock.destroy_for_testing();
 	poll::destroy_poll(poll);
 	scenario.end();

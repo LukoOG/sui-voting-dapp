@@ -3,7 +3,7 @@ module poll::version;
 use sui::package::{Self, Publisher};
 
 ///Consts
-const PACKAGE_VERSION: u64 = 1; //always update before running cli upgrade command
+const PACKAGE_VERSION: u64 = 2; //always update before running cli upgrade command
 
 const EIncompatibleVersion: u64 = 11;
 
@@ -17,7 +17,7 @@ public struct VERSION has drop ()
 
 fun init(otw: VERSION, ctx: &mut TxContext){
 	package::claim_and_keep(otw, ctx);
-	transfer::transfer( Version{ id: object::new(ctx), v: 1 } ,ctx.sender())
+	transfer::share_object( Version{ id: object::new(ctx), v: 1 })
 }
 
 public fun check_is_valid(self: &Version){
@@ -40,10 +40,10 @@ use sui::test_scenario as ts;
 const Admin: address = @0xBAB434;
 
 #[test_only]
-public fun create_version_for_testing(ctx: &mut TxContext) { transfer::transfer( Version{ id: object::new(ctx), v: 1 } ,ctx.sender()) }
+public fun create_version_for_testing(ctx: &mut TxContext) { transfer::share_object( Version{ id: object::new(ctx), v: 2 }) }
 
 #[test_only]
-public fun create_fail_version_for_testing(ctx: &mut TxContext) { transfer::transfer( Version{ id: object::new(ctx), v: 0 } ,ctx.sender()) }
+public fun create_fail_version_for_testing(ctx: &mut TxContext) { transfer::share_object( Version{ id: object::new(ctx), v: 0 })  }
 
 
 #[test_only]
@@ -60,7 +60,7 @@ fun test_init(){
 	};
 	scenario.next_tx(Admin);
 	
-	assert!(scenario.has_most_recent_for_sender<Version>(), 1);
+	assert!(ts::has_most_recent_shared<Version>(), 1);
 	
 	scenario.end();
 }

@@ -1,9 +1,8 @@
 module poll::poll;
 
-use poll::version;
 use std::string::{String};
 use sui::table;
-use sui::package::{Self, Publisher};
+use sui::package::{Self};
 use sui::clock::Clock;
 
 const EInvalidNoOfOptions: u64 = 12;
@@ -26,12 +25,13 @@ public struct PollRegistery has key{
 	next_poll_id: u64,
 }
 
-
+//add thumbnail field when moving to testnet
 public struct Poll has key, store{
 	id: UID,
 	poll_id: u64, //registery index
 	title: String,
 	description: option::Option<String>,
+	thumbnail_url: String,
 	creator: address,
 	is_active: bool,
 	start_time: u64,
@@ -39,7 +39,7 @@ public struct Poll has key, store{
 	options: vector<PollOption>,
 	votes: table::Table<u64, u64>, //option index → voter count
 	voters: table::Table<address, u64>, //web3 voters address → option index
-	anon_voters: table::Table<u64, u64>, //anonymous voters → option index
+	anon_voters: table::Table<ID, u64>, //anonymous voters → option index
 }
 
 
@@ -65,6 +65,7 @@ public struct PollCreated {}
 public struct CreatePollRequest {
 	title: String,
 	description: Option<String>,
+	thumbnail_url: String,
 	duration: u64,
 	options: vector<PollOption>,
 }
@@ -93,6 +94,7 @@ public fun createCreatePollRequest(
 	version: &poll::version::Version,
 	title: String, 
 	desc: option::Option<String>, 
+	thumbnail_url: String,
 	duration: u64,
 	option_names: vector<String>,
     option_images: vector<Option<String>>,
@@ -115,19 +117,19 @@ public fun createCreatePollRequest(
 		i = i + 1;
 	};
 	
-	CreatePollRequest { title, description: desc, duration, options: poll_options }
+	CreatePollRequest { title, description: desc, thumbnail_url, duration, options: poll_options }
 }
 
 //this will fail if the create hot potato constructor didn't succeed
 public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
 	//assert!();
-	let CreatePollRequest { title, description, duration, options } = createPollRequest;
+	let CreatePollRequest { title, description, thumbnail_url, duration, options } = createPollRequest;
 
 
 	let poll = Poll { 
 				id: object::new(ctx),
 				poll_id: registery.next_poll_id,
-				title, description, 
+				title, description, thumbnail_url,
 				creator: ctx.sender(), 
 				is_active: true, 
 				start_time: clock.timestamp_ms(), 
@@ -135,7 +137,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 				options,
 				votes: table::new<u64, u64>(ctx),
 				voters: table::new<address, u64>(ctx),
-				anon_voters: table::new<u64, u64>(ctx),
+				anon_voters: table::new<ID, u64>(ctx),
 	};
 					
 	let poll_object_id = object::uid_to_inner(&poll.id);	
