@@ -3,7 +3,7 @@ module poll::version;
 use sui::package::{Self, Publisher};
 
 ///Consts
-const PACKAGE_VERSION: u64 = 3; //always update before running cli upgrade command
+const PACKAGE_VERSION: u64 = 1; //always update before running cli upgrade command
 
 const EIncompatibleVersion: u64 = 11;
 
@@ -40,7 +40,7 @@ use sui::test_scenario as ts;
 const Admin: address = @0xBAB434;
 
 #[test_only]
-public fun create_version_for_testing(ctx: &mut TxContext) { transfer::share_object( Version{ id: object::new(ctx), v: 2 }) }
+public fun create_version_for_testing(ctx: &mut TxContext) { transfer::share_object( Version{ id: object::new(ctx), v: PACKAGE_VERSION }) }
 
 #[test_only]
 public fun create_fail_version_for_testing(ctx: &mut TxContext) { transfer::share_object( Version{ id: object::new(ctx), v: 0 })  }

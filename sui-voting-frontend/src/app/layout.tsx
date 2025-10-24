@@ -7,6 +7,7 @@ import '@mysten/dapp-kit/dist/index.css';
 import SuiLayoutProvider from "@/layout/SuiLayoutProvider";
 
 import Navbar from "@/components/layout/navbar"
+import { Toaster } from "@/components/ui/sonner"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({
 				</footer>
 				
 			</section>
+			<Toaster/>
           </SuiLayoutProvider>
       </body>
     </html>

@@ -20,6 +20,7 @@ export const createPollTx =  ({ title, description, thumbnail, duration, options
 		],
 		typeArguments: [],
 	});
+	console.log(suiEnv.packageId)
 	
 	const poll = tx.moveCall({
 		target: `${suiEnv.packageId}::poll::create_poll`,
@@ -32,7 +33,5 @@ export const createPollTx =  ({ title, description, thumbnail, duration, options
 	});
 	
 	tx.transferObjects([poll], address)
-	
-	tx.setGasBudget(1000000);
 	return tx
 }

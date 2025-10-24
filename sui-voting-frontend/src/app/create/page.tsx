@@ -14,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+import { useCurrentAccount } from "@mysten/dapp-kit";
+
 import { usePollActions } from "@/hooks/handlePollActions";
 import type { Option } from "@/lib/types"
 //import { useNavigate } from "react-router-dom";
@@ -27,6 +29,7 @@ type PollOption = { id: string } & Option;
 
 const CreatePoll = () => {
   const navigate = (_stuff: string) => ("navigetd") //useNavigate();
+  const account = useCurrentAccount();
   const { createPoll } = usePollActions();
   const [pollTitle, setPollTitle] = useState("");
   const [pollDescription, setPollDescription] = useState("");
@@ -59,12 +62,21 @@ const CreatePoll = () => {
     ));
   };
 
-	const handleCreatePoll = () => {
-	  const errors: string[] = [];
-	  
-	  toast("Error");
-	  
-	  console.log("create");
+	const handleCreatePoll = async () => {
+		const errors: string[] = [];
+		if (!pollTitle.trim()) errors.push("Poll title is required.");
+		if (options.length < 2) errors.push("You must have at least two options.");
+		if (options.some(opt => !opt.name.trim())) errors.push("All options must have names.");
+		if (pollTitle.length > 80) errors.push("Title is too long (max 80 characters).");
+		if (pollDescription.length > 250) errors.push("Description too long (max 250 characters).");
+
+		if (errors.length > 0) {
+			toast("Error", {
+			  description: errors.map((e) => e)
+			 
+			});
+		return;
+		}
 
 	  
 
@@ -85,7 +97,8 @@ const CreatePoll = () => {
 		  thumbnail: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
 		  duration,
 		  options,
-		}
+		},
+		account!.address
 	  );
 	};
 
