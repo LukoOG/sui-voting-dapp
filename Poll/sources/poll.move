@@ -3,6 +3,7 @@ module poll::poll;
 use std::string::{String};
 use sui::table;
 use sui::package;
+use sui::display;
 use sui::clock::Clock;
 
 const EInvalidNoOfOptions: u64 = 12;
@@ -72,10 +73,38 @@ public struct CreatePollRequest {
 
 ///functions
 fun init(otw: POLL, ctx: &mut TxContext){
-	package::claim_and_keep(otw, ctx);
+	let publisher: Publisher = package::claim(otw, ctx);
+	
+	//display object
+	let keys = vector[
+		b"name".to_string(),
+		b"description".to_string(),
+		b"image".to_string(),
+		b"creator".to_string(),
+		b"status".to_string(),
+		b"timing".to_string(),
+	];
+
+	let values = vector[
+		b"{title}".to_string(),
+		b"{description}".to_string(),
+		b"{thumbnail_url}".to_string(),
+		b"{creator}".to_string(),
+		b"{is_active}".to_string(),
+		b"Starts at {start_time}, closes at {close_time}".to_string(),
+	];
+	
+	let mut display = display::new_with_fields<Poll>(
+        &publisher, keys, values, ctx
+    );
+
+    // Commit first version of `Display` to apply changes.
+    display.update_version();
 	
 	let registery = PollRegistery{ id: object::new(ctx), owner: ctx.sender(), polls: table::new<u64, ID>(ctx), next_poll_id: 0 };
-	transfer::share_object(registery)
+	transfer::share_object(registery);
+	transfer::public_transfer(publisher, ctx.sender());
+	transfer::public_transfer(display, ctx.sender());
 }
 
 //helpers
