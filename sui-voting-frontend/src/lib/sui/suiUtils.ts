@@ -20,11 +20,12 @@ export const createPollTx =  ({ title, description, thumbnail, duration, options
 		],
 		typeArguments: [],
 	});
-	console.log(suiEnv.packageId)
+	;
+	
 	
 	const poll = tx.moveCall({
 		target: `${suiEnv.packageId}::poll::create_poll`,
-		arguments: [
+		arguments: [			
 			tx.object(suiEnv.registeryObject),
 			request,
 			tx.object("0x6"),

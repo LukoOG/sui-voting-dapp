@@ -34,8 +34,8 @@ const CreatePoll = () => {
   const [pollTitle, setPollTitle] = useState("");
   const [pollDescription, setPollDescription] = useState("");
   const [options, setOptions] = useState<PollOption[]>([
-    { id: "1", name: "", image: "", caption: "" },
-    { id: "2", name: "", image: "", caption: "" },
+    { id: "1", name: "", image: null, caption: null },
+    { id: "2", name: "", image: null, caption: null },
   ]);
 
   // Settings
@@ -89,16 +89,18 @@ const CreatePoll = () => {
 		"0": 0
 	  };
 	  const duration = durationMap[pollDuration] ?? DEFAULT_DURATION;
+	  
+  console.log(account!.address)
 
 	  createPoll.mutateAsync(
 		{
+			address: account?.address,
 		  title: pollTitle.trim(),
 		  description: pollDescription.trim(),
 		  thumbnail: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
 		  duration,
 		  options,
 		},
-		account!.address
 	  );
 	};
 
