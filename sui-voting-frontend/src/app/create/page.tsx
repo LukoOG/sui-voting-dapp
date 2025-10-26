@@ -94,7 +94,7 @@ const CreatePoll = () => {
 
 	  createPoll.mutateAsync(
 		{
-			address: account?.address,
+			address: account!.address,
 		  title: pollTitle.trim(),
 		  description: pollDescription.trim(),
 		  thumbnail: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",

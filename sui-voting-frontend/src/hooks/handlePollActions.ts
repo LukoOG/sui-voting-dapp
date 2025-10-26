@@ -5,7 +5,7 @@ import { createPollTx } from "@/lib/sui/suiUtils";
 import { createPollArgs } from "@/lib/types"
 
 //interfaces
-type createPollArgs = createPollArgs & { address: string }
+type createPollArgsT = createPollArgs & { address: string }
 
 export const usePollActions = () => {
     const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
@@ -13,7 +13,7 @@ export const usePollActions = () => {
     const queryClient = useQueryClient();
 	
 	const createPoll =  useMutation({
-		mutationFn: async (args: createPollArgs) => {
+		mutationFn: async (args: createPollArgsT) => {
 			const tx = createPollTx(args, args.address);
 			
 			const result = await signAndExecuteTransaction({ transaction: tx });
