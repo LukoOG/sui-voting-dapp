@@ -3,7 +3,7 @@ import { useSuiClientQuery } from '@mysten/dapp-kit';
 export function usePaginatedPolls(page: number, pageSize: number) {
   return useSuiClientQuery('getOwnedObjects', {
     owner: '0xYourPollModuleAddress', // or use a filter for poll type
-    cursor: page * pageSize,
+    cursor: String(page * pageSize),
     limit: pageSize,
     // Add type filter if needed
   });

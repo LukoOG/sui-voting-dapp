@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, TrendingUp, Clock, Vote, Wallet } from "lucide-react";
@@ -11,7 +12,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 
 // Mock data for polls
 const mockPolls = [
@@ -107,7 +107,7 @@ const Explore = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navbar */}
+      {/* Navbar 
       <nav className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -129,6 +129,7 @@ const Explore = () => {
           </div>
         </div>
       </nav>
+	  */}
 
       {/* Header */}
       <div className="container mx-auto px-4 pt-12 pb-8">
@@ -205,7 +206,7 @@ const Explore = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
             >
-              <Link to={`/poll/${poll.id}`}>
+
                 <div className="group cursor-pointer">
                   <div className="bg-card-bg border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-accent/50 transition-all">
                     {/* Options Preview */}
@@ -260,7 +261,6 @@ const Explore = () => {
                     </div>
                   </div>
                 </div>
-              </Link>
             </motion.div>
           ))}
         </div>
@@ -268,3 +268,5 @@ const Explore = () => {
     </div>
   );
 };
+
+export default Explore;
