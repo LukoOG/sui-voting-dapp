@@ -26,6 +26,13 @@ public struct PollRegistery has key{
 	next_poll_id: u64,
 }
 
+public struct PollConfig has store, drop {
+		//setting fields
+	allow_anon_vote: bool, //allow creators to allow or disallow anon users from voting
+	allow_multiple_choice: bool,
+	allow_weighted: bool, //wallet votes count more than anon votes
+}
+
 //add thumbnail field when moving to testnet
 public struct Poll has key, store{
 	id: UID,
@@ -37,6 +44,7 @@ public struct Poll has key, store{
 	is_active: bool,
 	start_time: u64,
 	close_time: u64,
+	poll_config: PollConfig,
 	options: vector<PollOption>,
 	votes: table::Table<u64, u64>, //option index → voter count
 	voters: table::Table<address, u64>, //web3 voters address → option index
@@ -49,6 +57,13 @@ public struct PollOption has store, drop {
     name: String,
     image_url: Option<String>,
     caption: Option<String>,
+}
+
+#[allow(unused_field)]
+public struct VoteTicket {
+	option: u64,
+	owner: address,
+	type: 
 }
 
 #[allow(unused_field)]
@@ -117,9 +132,8 @@ fun set_duration(d: u64, clock: &Clock): u64{
 	clock.timestamp_ms() + d
 }
 
-//tx functions
-
-public fun createCreatePollRequest(
+//request constructors
+entry fun createCreatePollRequest(
 	version: &poll::version::Version,
 	title: String, 
 	desc: option::Option<String>, 
@@ -149,6 +163,8 @@ public fun createCreatePollRequest(
 	CreatePollRequest { title, description: desc, thumbnail_url, duration, options: poll_options }
 }
 
+//Tx functions
+
 //this will fail if the create hot potato constructor didn't succeed
 public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
 	//assert!();
@@ -176,7 +192,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	poll
 }
 
-entry fun vote_on_poll(_ctx: &mut TxContext){
+public fun vote_on_poll(_ctx: &mut TxContext){
 	abort 0
 }
 
