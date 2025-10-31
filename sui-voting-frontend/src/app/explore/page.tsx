@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { usePaginatedPolls } from "@/hooks/handlePollQueries";
 
 // Mock data for polls
 const mockPolls = [
@@ -104,33 +105,11 @@ const Explore = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("trending");
   const [filterStatus, setFilterStatus] = useState("all");
+  const { data: pollData } = usePaginatedPolls(0, 10);
+  console.log(pollData)
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar 
-      <nav className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold text-foreground hover:text-accent transition-colors">
-              VersusVote
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link to="/explore">
-                <Button variant="ghost">Explore</Button>
-              </Link>
-              <Link to="/manage">
-                <Button variant="ghost">My Polls</Button>
-              </Link>
-              <Link to="/create">
-                <Button>Create Poll</Button>
-              </Link>
-              <Button variant="outline">Connect Wallet</Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-	  */}
-
+    <div className="min-h-screen bg-background">   
       {/* Header */}
       <div className="container mx-auto px-4 pt-12 pb-8">
         <motion.div

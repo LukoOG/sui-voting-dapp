@@ -1,7 +1,7 @@
 import { Transaction } from "@mysten/sui/transactions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
-import { createPollTx } from "@/lib/sui/suiUtils";
+import { createPollTx } from "@/lib/sui/suiTx";
 import { createPollArgs } from "@/lib/types"
 
 //interfaces

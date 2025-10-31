@@ -1,11 +1,26 @@
 import { useSuiClientQuery } from '@mysten/dapp-kit';
+import { useMemo } from 'react';
+import suiEnv from "@/lib/sui/suiEnv";
 
 export function usePaginatedPolls(page: number, pageSize: number) {
-  return useSuiClientQuery('getOwnedObjects', {
-    owner: '0xYourPollModuleAddress', // or use a filter for poll type
-    cursor: String(page * pageSize),
+  const cursor = page === 0 ? null : String((page - 1) * pageSize);
+
+  const filter = useMemo(
+    () => ({
+      StructType: suiEnv.pollType,
+    }),
+    []
+  );
+
+  return useSuiClientQuery('queryObjects', {
+    filter,
+    options: {
+      showContent: true,
+      showOwner: true,
+      showType: true,
+    },
     limit: pageSize,
-    // Add type filter if needed
+    cursor,
   });
 }
 
