@@ -1,9 +1,9 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, TrendingUp, Clock, Vote, Wallet } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -195,7 +195,9 @@ const Explore = () => {
                           key={idx}
                           className="relative aspect-square overflow-hidden rounded-lg"
                         >
-                          <img
+                          <Image
+							height={1024}
+							width={860}
                             src={option.image}
                             alt={option.text}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"

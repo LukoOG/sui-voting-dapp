@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
 				hostname:"images.unsplash.com"
 			},
 			{
-				protocal: "https",
+				protocol: "https",
 				hostname: "res.cloudinary.com"
 			},
 		]

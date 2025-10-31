@@ -22,13 +22,13 @@ import type { Option } from "@/lib/types"
 
 const DEFAULT_DURATION: number = 604800000 //1 week
 
-const getDuration = ():number | null => null 
+//const getDuration = ():number | null => null 
 
 //id to help map mutations
 type PollOption = { id: string } & Option;
 
 const CreatePoll = () => {
-  const navigate = (_stuff: string) => ("navigetd") //useNavigate();
+  const navigate = () => ("navigetd") //useNavigate();
   const account = useCurrentAccount();
   const { createPoll } = usePollActions();
   const [pollTitle, setPollTitle] = useState("");
@@ -116,7 +116,7 @@ const CreatePoll = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/")}
+              onClick={() => navigate()}
               className="text-muted-foreground hover:text-accent"
             >
               <ArrowLeft className="w-5 h-5" />

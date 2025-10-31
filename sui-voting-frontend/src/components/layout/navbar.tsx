@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Vote, Waves } from 'lucide-react';
+import { Waves } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { useDisconnectWallet, ConnectButton, ConnectModal, useCurrentAccount } from "@mysten/dapp-kit"
+import { useDisconnectWallet, ConnectModal, useCurrentAccount } from "@mysten/dapp-kit"
 
 export default function Navbar() {
   const account  = useCurrentAccount();

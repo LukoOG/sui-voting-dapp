@@ -1,4 +1,3 @@
-import { SuiObjectResponse } from '@mysten/sui/client'; // or your fetch type
 
 export type PollPreview = {
   id: string;
@@ -14,6 +13,7 @@ export type PollPreview = {
   totalVotes: number;
 };
 
+/*
 export function parsePollPreview(obj: SuiObjectResponse): PollPreview | null {
   // Adjust the path to your Move struct fields as needed
   const fields = obj.data?.content?.fields;
@@ -42,3 +42,4 @@ export function parsePollPreview(obj: SuiObjectResponse): PollPreview | null {
     totalVotes,
   };
 }
+*/
