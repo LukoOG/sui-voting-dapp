@@ -1,4 +1,4 @@
-import { SuiObjectResponse } from '@mysten/sui.js/client'; // or your fetch type
+import { SuiObjectResponse } from '@mysten/sui/client'; // or your fetch type
 
 export type PollPreview = {
   id: string;

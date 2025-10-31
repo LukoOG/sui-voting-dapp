@@ -10,4 +10,5 @@ export interface createPollArgs {
 	thumbnail: string,
 	duration: number,
 	options: Option[],
+	config: boolean[],
 };

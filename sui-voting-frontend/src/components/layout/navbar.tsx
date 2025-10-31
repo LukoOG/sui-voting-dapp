@@ -42,14 +42,12 @@ export default function Navbar() {
 
             {/* Create Poll (visible only for connected users) */}
             {account && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hidden sm:flex items-center text-muted-foreground hover:text-accent transition"
-              >
-                <Vote className="w-4 h-4 mr-2" />
-                Create Poll
-              </Button>
+            <a
+              href="/create"
+              className="hidden sm:inline text-muted-foreground hover:text-accent transition-colors font-medium"
+            >
+              Create Poll
+            </a>
             )}
 
             {/* Wallet Section */}

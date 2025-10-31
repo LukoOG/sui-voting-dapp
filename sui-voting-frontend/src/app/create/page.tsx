@@ -34,9 +34,10 @@ const CreatePoll = () => {
   const [pollTitle, setPollTitle] = useState("");
   const [pollDescription, setPollDescription] = useState("");
   const [options, setOptions] = useState<PollOption[]>([
-    { id: "1", name: "", image: null, caption: null },
-    { id: "2", name: "", image: null, caption: null },
+    { id: "1", name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: null },
+    { id: "2", name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: null },
   ]);
+  const [config, setConfig] = useState<boolean[]>([true, true, true])
 
   // Settings
   const [weightedVotes, setWeightedVotes] = useState(false);
@@ -47,7 +48,7 @@ const CreatePoll = () => {
 
   const addOption = () => {
     const newId = (Math.max(...options.map(o => parseInt(o.id))) + 1).toString();
-    setOptions([...options, { id: newId, name: "", image: "", caption:"" }]);
+    setOptions([...options, { id: newId, name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption:"" }]);
   };
 
   const removeOption = (id: string) => {
@@ -97,9 +98,10 @@ const CreatePoll = () => {
 			address: account!.address,
 		  title: pollTitle.trim(),
 		  description: pollDescription.trim(),
-		  thumbnail: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
+		  thumbnail: "https://tse1.mm.bing.net/th/id/OIP.2FkHky72bCTMXB3GQPJR1wHaEc?rs=1&pid=ImgDetMain&o=7&rm=3",
 		  duration,
 		  options,
+		  config,
 		},
 	  );
 	};

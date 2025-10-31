@@ -3,7 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import suiEnv from "@/lib/sui/suiEnv";
 import { createPollArgs } from "@/lib/types"
 
-export const createPollTx =  ({ title, description, thumbnail, duration, options }: createPollArgs, address: string) => {
+export const createPollTx =  ({ title, description, thumbnail, duration, options, config }: createPollArgs, address: string) => {
 	const tx = new Transaction()
 	
 	const request = tx.moveCall({
@@ -17,6 +17,7 @@ export const createPollTx =  ({ title, description, thumbnail, duration, options
 			tx.pure('vector<string>', options.map((opt) => opt.name )),
 			tx.pure('vector<option<string>>', options.map((opt) => opt.image ?? null)),
 			tx.pure('vector<option<string>>', options.map((opt) => opt.caption ?? null)),
+			tx.pure.vector('bool', config ? config : [true, true, true]),
 		],
 		typeArguments: [],
 	});
