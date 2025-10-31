@@ -2,12 +2,18 @@ module poll::poll;
 
 use std::string::{String};
 use sui::table;
-use sui::package;
+use sui::package::{Self, Publisher};
 use sui::display;
 use sui::clock::Clock;
 
+///Errors
 const EInvalidNoOfOptions: u64 = 12;
 const EUnequalLength :u64 = 13;
+const EInvalidConfigLength: u64 = 15;
+
+
+///constants
+const Poll_Config_Max_Length: u8 = 3; //current number of fields in pollconfig struct
 
 //package One time witness
 public struct POLL has drop ()
@@ -63,7 +69,8 @@ public struct PollOption has store, drop {
 public struct VoteTicket {
 	option: u64,
 	owner: address,
-	type: 
+	is_anon: String,
+	weight: u8,
 }
 
 #[allow(unused_field)]
@@ -84,6 +91,7 @@ public struct CreatePollRequest {
 	thumbnail_url: String,
 	duration: u64,
 	options: vector<PollOption>,
+	poll_config: PollConfig,
 }
 
 ///functions
@@ -128,12 +136,21 @@ fun createPollOption(id: &u64, name:String, image_url:option::Option<String>, ca
 	PollOption { id, name, image_url, caption }
 }
 
+fun setConfiguration(poll_config_bools: vector<bool>):PollConfig{
+	assert!(poll_config_bools.length() == Poll_Config_Max_Length as u64, EInvalidConfigLength);
+	PollConfig{
+		allow_anon_vote: *poll_config_bools.borrow(0),
+		allow_multiple_choice: *poll_config_bools.borrow(1),
+		allow_weighted: *poll_config_bools.borrow(2),
+	}
+}
+
 fun set_duration(d: u64, clock: &Clock): u64{
 	clock.timestamp_ms() + d
 }
 
 //request constructors
-entry fun createCreatePollRequest(
+public fun createCreatePollRequest(
 	version: &poll::version::Version,
 	title: String, 
 	desc: option::Option<String>, 
@@ -142,6 +159,7 @@ entry fun createCreatePollRequest(
 	option_names: vector<String>,
     option_images: vector<Option<String>>,
     option_captions: vector<Option<String>>,
+	poll_config_bools: vector<bool>,
 	_ctx: &mut TxContext
 ): CreatePollRequest{
 	poll::version::check_is_valid(version);
@@ -160,7 +178,7 @@ entry fun createCreatePollRequest(
 		i = i + 1;
 	};
 	
-	CreatePollRequest { title, description: desc, thumbnail_url, duration, options: poll_options }
+	CreatePollRequest { title, description: desc, thumbnail_url, duration, options: poll_options, poll_config: setConfiguration(poll_config_bools) }
 }
 
 //Tx functions
@@ -168,7 +186,7 @@ entry fun createCreatePollRequest(
 //this will fail if the create hot potato constructor didn't succeed
 public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
 	//assert!();
-	let CreatePollRequest { title, description, thumbnail_url, duration, options } = createPollRequest;
+	let CreatePollRequest { title, description, thumbnail_url, duration, options, poll_config } = createPollRequest;
 
 
 	let poll = Poll { 
@@ -179,6 +197,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 				is_active: true, 
 				start_time: clock.timestamp_ms(), 
 				close_time: set_duration(duration, clock),
+				poll_config,
 				options,
 				votes: table::new<u64, u64>(ctx),
 				voters: table::new<address, u64>(ctx),
@@ -192,7 +211,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	poll
 }
 
-public fun vote_on_poll(_ctx: &mut TxContext){
+public fun vote_on_poll(_ctx: &mut TxContext){//:(VoteReceipt){
 	abort 0
 }
 
@@ -200,8 +219,6 @@ entry fun close_poll(_ctx: &mut TxContext){
 	abort 0
 }
 
-#[test_only]
-use sui::package::Publisher;
 
 #[test_only]
 use sui::test_scenario as ts;

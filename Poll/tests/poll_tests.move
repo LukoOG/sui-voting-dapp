@@ -38,6 +38,7 @@ fun test_create_poll_request(){
 	let option_names = vector<String>[b"12".to_string(), b"23".to_string()];
 	let option_images = vector<option::Option<String>>[option::none(), option::none()];
 	let option_captions = vector<option::Option<String>>[option::none()];
+	let config_bools = vector[true, true, true];
 	
 	let clock = scenario.take_shared<Clock>();
 	let mut registery = scenario.take_shared<poll::PollRegistery>();
@@ -52,6 +53,7 @@ fun test_create_poll_request(){
 		option_names,
 		option_images,
 		option_captions,
+		config_bools,
 		scenario.ctx()
 	);
 	
@@ -107,6 +109,7 @@ fun test_version_check(){
 	let option_names = vector<String>[b"12".to_string(), b"23".to_string(), b"34".to_string()];
 	let option_images = vector<option::Option<String>>[option::none(), option::none(), option::none()];
 	let option_captions = vector<option::Option<String>>[option::none()];
+	let config_bools = vector[true, true, true];
 	
 	let create_poll_request = poll::createCreatePollRequest(
 		&version,
@@ -117,6 +120,7 @@ fun test_version_check(){
 		option_names,
 		option_images,
 		option_captions,
+		config_bools,
 		scenario.ctx()
 	);
 	
