@@ -21,26 +21,31 @@ export function usePaginatedPolls(page: number, pageSize: number) {
     if (page > 1 && endCursor) {
       afterCursor = endCursor;
     }
+	console.log(suiEnv.pollType)
 
-    const query = `
-      query GetPolls($first: Int, $after: String) {
-        objects(
-          first: $first,
-          after: $after,
-          filter: { type: "${suiEnv.pollType}" }
-        ) {
-          nodes {
-            address
-            type
-            // add other fields you need
-          }
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-        }
+	const query = `
+  query GetPolls($first: Int, $after: String) {
+    objects(
+      first: $first,
+      after: $after,
+      filter: { type: "0xc80cb054484389b580722c348ddb27e7c5ff994f1f3efe23dc37751f661cd316::poll::Poll" }
+    ) {
+      nodes {
+		  address
+		  asMoveObject {
+			contents {
+			  json
+			}
+		  }
+		}
+      pageInfo {
+        hasNextPage
+        endCursor
       }
-    `;
+    }
+  }
+`;
+
 
     fetch(SUI_GRAPHQL_ENDPOINT, {
       method: "POST",
@@ -50,12 +55,13 @@ export function usePaginatedPolls(page: number, pageSize: number) {
         variables: {
           first: pageSize,
           after: afterCursor,
+		  //typeStruct: suiEnv.pollType,
         },
       }),
     })
       .then((res) => res.json())
       .then((data) => {
-		console.log(data);
+		  console.log(data);
         setPolls(data.data.objects.nodes);
         setHasNextPage(data.data.objects.pageInfo.hasNextPage);
         setEndCursor(data.data.objects.pageInfo.endCursor);

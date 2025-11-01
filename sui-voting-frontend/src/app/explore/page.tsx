@@ -105,8 +105,8 @@ const Explore = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("trending");
   const [filterStatus, setFilterStatus] = useState("all");
-  const asd = usePaginatedPolls(0, 10);
-  console.log(asd)
+  const { polls } = usePaginatedPolls(0, 10);
+  console.log(polls)
 
   return (
     <div className="min-h-screen bg-background">   
