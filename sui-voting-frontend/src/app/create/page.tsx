@@ -3,6 +3,11 @@ import Image from "next/image";
 
 import { toast } from "sonner";
 
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { pollSchema } from "@/lib/schemas/poll.schema";
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -26,89 +31,77 @@ const DEFAULT_DURATION: number = 604800000 //1 week
 
 //id to help map mutations
 type PollOption = { id: string } & Option;
+type PollForm = z.infer<typeof pollSchema>;
+const DEFAULT_IMAGE = "https://tse3.mm.bing.net/th/id/OIP.vOD46Vt53-lH0WoF-nSq-AHaFj?w=963&h=722&rs=1&pid=ImgDetMain&o=7&rm=3";
 
 const CreatePoll = () => {
   const navigate = () => ("navigetd") //useNavigate();
   const account = useCurrentAccount();
   const { createPoll } = usePollActions();
-  const [pollTitle, setPollTitle] = useState("");
-  const [pollDescription, setPollDescription] = useState("");
-  const [options, setOptions] = useState<PollOption[]>([
-    { id: "1", name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: null },
-    { id: "2", name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: null },
-  ]);
-  const [config, setConfig] = useState<boolean[]>([true, true, true])
+  
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PollForm>({
+    resolver: zodResolver(pollSchema),
+    defaultValues: {
+      title: "",
+      image: DEFAULT_IMAGE,
+      description: "",
+      duration: "7",
+      options: [
+        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: "" },
+        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: "" },
+      ],
+      config: {
+        weightedVotes: false,
+        multipleChoice: false,
+        requireWallet: false,
+        showResults: true,
+      },
+    },
+  });
 
-  // Settings
-  const [weightedVotes, setWeightedVotes] = useState(false);
-  const [multipleChoice, setMultipleChoice] = useState(false);
-  const [pollDuration, setPollDuration] = useState("7");
-  const [requireWallet, setRequireWallet] = useState(false);
-  const [showResults, setShowResults] = useState(true);
+  const { fields, append, remove } = useFieldArray({
+    control: control,
+    name: "options",
+  });
+  
+	const handleCreatePoll = async (data: PollForm) => {
+		try {
+		  toast.loading("Creating poll...");
+		  const durationMap: Record<string, number> = {
+			"1": 86400000,
+			"3": 3 * 86400000,
+			"7": 7 * 86400000,
+			"14": 14 * 86400000,
+			"30": 30 * 86400000,
+			"0": 0,
+		  };
 
-  const addOption = () => {
-    const newId = (Math.max(...options.map(o => parseInt(o.id))) + 1).toString();
-    setOptions([...options, { id: newId, name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption:"" }]);
-  };
+		  await createPoll.mutateAsync({
+			address: account?.address!,
+			title: data.title,
+			description: data.description ?? "",
+			thumbnail: data.image,
+			duration: durationMap[data.duration],
+			options: data.options,
+			config: Object.values(data.config),
+		  });
 
-  const removeOption = (id: string) => {
-    if (options.length > 2) {
-      setOptions(options.filter(option => option.id !== id));
-    }
-  };
-
-  const updateOption = (id: string, field: "image" | "name" | "caption", value: string) => {
-    setOptions(options.map(option => 
-      option.id === id ? { ...option, [field]: value } : option
-    ));
-  };
-
-	const handleCreatePoll = async () => {
-		const errors: string[] = [];
-		if (!pollTitle.trim()) errors.push("Poll title is required.");
-		if (options.length < 2) errors.push("You must have at least two options.");
-		if (options.some(opt => !opt.name.trim())) errors.push("All options must have names.");
-		if (pollTitle.length > 80) errors.push("Title is too long (max 80 characters).");
-		if (pollDescription.length > 250) errors.push("Description too long (max 250 characters).");
-
-		if (errors.length > 0) {
-			toast("Error", {
-			  description: errors.map((e) => e)
-			 
-			});
-		return;
+		  toast.success("Poll created successfully!");
+		  form.reset();
+		} catch (e) {
+		  console.error(e);
+		  toast.error("Failed to create poll");
 		}
-
-	  
-
-	  const durationMap: Record<string, number> = {
-		"1": 86400000,
-		"3": 3 * 86400000,
-		"7": 7 * 86400000,
-		"14": 14 * 86400000,
-		"30": 30 * 86400000,
-		"0": 0
 	  };
-	  const duration = durationMap[pollDuration] ?? DEFAULT_DURATION;
-	  
-  console.log(account!.address)
-
-	  createPoll.mutateAsync(
-		{
-			address: account!.address,
-		  title: pollTitle.trim(),
-		  description: pollDescription.trim(),
-		  thumbnail: "https://tse1.mm.bing.net/th/id/OIP.2FkHky72bCTMXB3GQPJR1wHaEc?rs=1&pid=ImgDetMain&o=7&rm=3",
-		  duration,
-		  options,
-		  config,
-		},
-	  );
-	};
 
 
   return (
-    <div className="min-h-screen bg-background">
+ <div className="min-h-screen bg-background">
       {/* Header */}
       <nav className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -116,7 +109,7 @@ const CreatePoll = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate()}
+              onClick={() => navigate("/")}
               className="text-muted-foreground hover:text-accent"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -133,8 +126,8 @@ const CreatePoll = () => {
           </div>
 
           <Button 
-            onClick={handleCreatePoll}
-            className="cursor-pointer bg-accent hover:bg-accent-hover text-white"
+            onClick={handleSubmit(handleCreatePoll)}
+            className="bg-accent hover:bg-accent-hover text-white"
           >
             Publish Poll
           </Button>
@@ -179,6 +172,32 @@ const CreatePoll = () => {
                       className="resize-none"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                      <Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
+                    </div>
+                    <Input
+                      id="thumbnail"
+                      placeholder="https://example.com/thumbnail.jpg"
+                      value={thumbnailUrl}
+                      onChange={(e) => setThumbnailUrl(e.target.value)}
+                      className="text-sm"
+                    />
+                    {thumbnailUrl && (
+                      <div className="mt-2 relative h-40 rounded-md overflow-hidden border border-border">
+                        <img
+                          src={thumbnailUrl}
+                          alt="Poll thumbnail preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -220,30 +239,43 @@ const CreatePoll = () => {
                       </div>
 
                       <div className="space-y-2">
+                        <Label htmlFor={`option-name-${option.id}`}>Option Name *</Label>
                         <Input
+                          id={`option-name-${option.id}`}
                           placeholder="Enter option name"
-                          value={option.name}
-                          onChange={(e) => updateOption(option.id, "name", e.target.value)}
+                          value={option.text}
+                          onChange={(e) => updateOption(option.id, "text", e.target.value)}
                           className="text-base"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor={`option-caption-${option.id}`}>Caption (Optional)</Label>
+                        <Input
+                          id={`option-caption-${option.id}`}
+                          placeholder="Add a short description"
+                          value={option.caption}
+                          onChange={(e) => updateOption(option.id, "caption", e.target.value)}
+                          className="text-sm"
                         />
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <ImageIcon className="w-4 h-4" />
-                          <span>Image URL (Optional)</span>
+                          <Label htmlFor={`option-image-${option.id}`}>Image URL (Optional)</Label>
                         </div>
                         <Input
+                          id={`option-image-${option.id}`}
                           placeholder="https://example.com/image.jpg"
-                          value={option.image ?? ""}
-                          onChange={(e) => updateOption(option.id, "image", e.target.value)}
+                          value={option.imageUrl}
+                          onChange={(e) => updateOption(option.id, "imageUrl", e.target.value)}
                           className="text-sm"
                         />
-                        {option.image && (
+                        {option.imageUrl && (
                           <div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
-                            <Image
-							width={1000} height={800}
-                              src={option.image}
+                            <img
+                              src={option.imageUrl}
                               alt={`Option ${index + 1} preview`}
                               className="w-full h-full object-cover"
                               onError={(e) => {
