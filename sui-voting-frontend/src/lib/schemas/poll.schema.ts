@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const pollSchema = z.object({
   title: z.string().min(3, "Poll title is required").max(80),
-  thumbnail: z.string().max(1024).optional(),
+  thumbnail: z.string().max(1024),
   description: z.string().max(250).optional(),
   duration: z.string(),
   options: z

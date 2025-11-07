@@ -3,7 +3,7 @@ import Image from "next/image";
 
 import { toast } from "sonner";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { pollSchema } from "@/lib/schemas/poll.schema";
@@ -48,7 +48,7 @@ const CreatePoll = () => {
     resolver: zodResolver(pollSchema),
     defaultValues: {
       title: "",
-      image: DEFAULT_IMAGE,
+      thumbnail: DEFAULT_IMAGE,
       description: "",
       duration: "7",
       options: [
@@ -70,8 +70,8 @@ const CreatePoll = () => {
   });
   
 	const handleCreatePoll = async (data: PollForm) => {
+		const toastId = toast.loading("Creating poll...");
 		try {
-		  toast.loading("Creating poll...");
 		  const durationMap: Record<string, number> = {
 			"1": 86400000,
 			"3": 3 * 86400000,
@@ -80,356 +80,408 @@ const CreatePoll = () => {
 			"30": 30 * 86400000,
 			"0": 0,
 		  };
-
 		  await createPoll.mutateAsync({
 			address: account?.address!,
 			title: data.title,
 			description: data.description ?? "",
-			thumbnail: data.image,
+			thumbnail: data.thumbnail,
 			duration: durationMap[data.duration],
 			options: data.options,
-			config: Object.values(data.config),
+			config: Object.values(data.config).slice(0, 3),
 		  });
-
+		  
+		  toast.dismiss(toastId);
 		  toast.success("Poll created successfully!");
 		  form.reset();
 		} catch (e) {
 		  console.error(e);
+		  toast.dismiss(toastId);
 		  toast.error("Failed to create poll");
 		}
 	  };
 
 
   return (
- <div className="min-h-screen bg-background">
-      {/* Header */}
-      <nav className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-              className="text-muted-foreground hover:text-accent"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shadow-md">
-                <Waves className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight text-foreground">Create Poll</h1>
-                <p className="text-xs text-muted-foreground">Set up your versus battle</p>
-              </div>
-            </div>
-          </div>
+	<div className="min-h-screen bg-background">
+	  {/* Header */}
+	  <nav className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
+		<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+		  <div className="flex items-center gap-4">
+			<Button
+			  variant="ghost"
+			  size="icon"
+			  onClick={() => navigate("/")}
+			  className="text-muted-foreground hover:text-accent"
+			>
+			  <ArrowLeft className="w-5 h-5" />
+			</Button>
+			<div className="flex items-center gap-3">
+			  <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shadow-md">
+				<Waves className="w-5 h-5 text-white" />
+			  </div>
+			  <div>
+				<h1 className="text-lg font-semibold tracking-tight text-foreground">Create Poll</h1>
+				<p className="text-xs text-muted-foreground">Set up your versus battle</p>
+			  </div>
+			</div>
+		  </div>
 
-          <Button 
-            onClick={handleSubmit(handleCreatePoll)}
-            className="bg-accent hover:bg-accent-hover text-white"
-          >
-            Publish Poll
-          </Button>
-        </div>
-      </nav>
+		  <Button
+			onClick={handleSubmit(handleCreatePoll)}
+			className="bg-accent hover:bg-accent-hover text-white"
+		  >
+			Publish Poll
+		  </Button>
+		</div>
+	  </nav>
 
-      {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left Column - Main Form */}
-          <div className="lg:col-span-2 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Poll Details</CardTitle>
-                  <CardDescription>Give your poll a catchy title and description</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Poll Title *</Label>
-                    <Input
-                      id="title"
-                      placeholder="e.g., Best DeFi Protocol on Sui?"
-                      value={pollTitle}
-                      onChange={(e) => setPollTitle(e.target.value)}
-                      className="text-base"
-                    />
-                  </div>
+	  {/* Main Content */}
+	  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+		<div className="grid gap-8 lg:grid-cols-3">
+		  {/* Left Column - Main Form */}
+		  <div className="lg:col-span-2 space-y-6">
+			{/* Poll Details */}
+			<motion.div
+			  initial={{ opacity: 0, y: 20 }}
+			  animate={{ opacity: 1, y: 0 }}
+			  transition={{ duration: 0.4 }}
+			>
+			  <Card>
+				<CardHeader>
+				  <CardTitle>Poll Details</CardTitle>
+				  <CardDescription>Give your poll a catchy title and description</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+				  <div className="space-y-2">
+					<Label htmlFor="title">Poll Title *</Label>
+					<Input
+					  id="title"
+					  placeholder="e.g., Best DeFi Protocol on Sui?"
+					  {...register("title")}
+					  className="text-base"
+					/>
+					{errors.title && (
+					  <p className="text-xs text-destructive mt-1">{errors.title.message}</p>
+					)}
+				  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Add context or details about your poll..."
-                      value={pollDescription}
-                      onChange={(e) => setPollDescription(e.target.value)}
-                      rows={3}
-                      className="resize-none"
-                    />
-                  </div>
+				  <div className="space-y-2">
+					<Label htmlFor="description">Description (Optional)</Label>
+					<Textarea
+					  id="description"
+					  placeholder="Add context or details about your poll..."
+					  rows={3}
+					  {...register("description")}
+					  className="resize-none"
+					/>
+					{errors.description && (
+					  <p className="text-xs text-destructive mt-1">{errors.description.message}</p>
+					)}
+				  </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                      <Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
-                    </div>
-                    <Input
-                      id="thumbnail"
-                      placeholder="https://example.com/thumbnail.jpg"
-                      value={thumbnailUrl}
-                      onChange={(e) => setThumbnailUrl(e.target.value)}
-                      className="text-sm"
-                    />
-                    {thumbnailUrl && (
-                      <div className="mt-2 relative h-40 rounded-md overflow-hidden border border-border">
-                        <img
-                          src={thumbnailUrl}
-                          alt="Poll thumbnail preview"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+				  <div className="space-y-2">
+					<div className="flex items-center gap-2">
+					  <ImageIcon className="w-4 h-4 text-muted-foreground" />
+					  <Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
+					</div>
+					<Input
+					  id="thumbnail"
+					  placeholder="https://example.com/thumbnail.jpg"
+					  {...register("thumbnail")}
+					  className="text-sm"
+					/>
+					{errors.image && (
+					  <p className="text-xs text-destructive mt-1">{errors.image.message}</p>
+					)}
 
-            {/* Options */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Poll Options</CardTitle>
-                  <CardDescription>Add choices for people to vote on (minimum 2)</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {options.map((option, index) => (
-                    <motion.div
-                      key={option.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="p-4 border border-border rounded-lg bg-surface space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium text-muted-foreground">
-                          Option {index + 1}
-                        </Label>
-                        {options.length > 2 && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeOption(option.id)}
-                            className="h-6 w-6 text-destructive hover:text-destructive"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
+					{/* Preview */}
+					<Controller
+					  name="image"
+					  control={control}
+					  render={({ field }) =>
+						field.value ? (
+						  <div className="mt-2 relative h-40 rounded-md overflow-hidden border border-border">
+							<img
+							  src={field.value}
+							  alt="Poll thumbnail preview"
+							  className="w-full h-full object-cover"
+							  onError={(e) => {
+								e.currentTarget.src =
+								  "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
+							  }}
+							/>
+						  </div>
+						) : null
+					  }
+					/>
+				  </div>
+				</CardContent>
+			  </Card>
+			</motion.div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`option-name-${option.id}`}>Option Name *</Label>
-                        <Input
-                          id={`option-name-${option.id}`}
-                          placeholder="Enter option name"
-                          value={option.text}
-                          onChange={(e) => updateOption(option.id, "text", e.target.value)}
-                          className="text-base"
-                        />
-                      </div>
+			{/* Options */}
+			<motion.div
+			  initial={{ opacity: 0, y: 20 }}
+			  animate={{ opacity: 1, y: 0 }}
+			  transition={{ duration: 0.4, delay: 0.1 }}
+			>
+			  <Card>
+				<CardHeader>
+				  <CardTitle>Poll Options</CardTitle>
+				  <CardDescription>Add choices for people to vote on (minimum 2)</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+				  {fields.map((field, index) => (
+					<motion.div
+					  key={field.id}
+					  initial={{ opacity: 0, x: -20 }}
+					  animate={{ opacity: 1, x: 0 }}
+					  transition={{ duration: 0.3, delay: index * 0.05 }}
+					  className="p-4 border border-border rounded-lg bg-surface space-y-3"
+					>
+					  <div className="flex items-center justify-between">
+						<Label className="text-sm font-medium text-muted-foreground">
+						  Option {index + 1}
+						</Label>
+						{fields.length > 2 && (
+						  <Button
+							variant="ghost"
+							size="icon"
+							onClick={() => remove(index)}
+							className="h-6 w-6 text-destructive hover:text-destructive"
+						  >
+							<X className="w-4 h-4" />
+						  </Button>
+						)}
+					  </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`option-caption-${option.id}`}>Caption (Optional)</Label>
-                        <Input
-                          id={`option-caption-${option.id}`}
-                          placeholder="Add a short description"
-                          value={option.caption}
-                          onChange={(e) => updateOption(option.id, "caption", e.target.value)}
-                          className="text-sm"
-                        />
-                      </div>
+					  <div className="space-y-2">
+						<Label htmlFor={`options.${index}.name`}>Option Name *</Label>
+						<Input
+						  id={`options.${index}.name`}
+						  placeholder="Enter option name"
+						  {...register(`options.${index}.name`)}
+						  className="text-base"
+						/>
+						{errors.options?.[index]?.name && (
+						  <p className="text-xs text-destructive mt-1">
+							{errors.options[index]?.name?.message}
+						  </p>
+						)}
+					  </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <ImageIcon className="w-4 h-4" />
-                          <Label htmlFor={`option-image-${option.id}`}>Image URL (Optional)</Label>
-                        </div>
-                        <Input
-                          id={`option-image-${option.id}`}
-                          placeholder="https://example.com/image.jpg"
-                          value={option.imageUrl}
-                          onChange={(e) => updateOption(option.id, "imageUrl", e.target.value)}
-                          className="text-sm"
-                        />
-                        {option.imageUrl && (
-                          <div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
-                            <img
-                              src={option.imageUrl}
-                              alt={`Option ${index + 1} preview`}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+					  <div className="space-y-2">
+						<Label htmlFor={`options.${index}.caption`}>Caption (Optional)</Label>
+						<Input
+						  id={`options.${index}.caption`}
+						  placeholder="Add a short description"
+						  {...register(`options.${index}.caption`)}
+						  className="text-sm"
+						/>
+					  </div>
 
-                  <Button
-                    variant="outline"
-                    onClick={addOption}
-                    className="w-full border-dashed border-2 hover:border-accent hover:text-accent"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Another Option
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
+					  <div className="space-y-2">
+						<div className="flex items-center gap-2 text-sm text-muted-foreground">
+						  <ImageIcon className="w-4 h-4" />
+						  <Label htmlFor={`options.${index}.image`}>Image URL (Optional)</Label>
+						</div>
+						<Input
+						  id={`options.${index}.image`}
+						  placeholder="https://example.com/image.jpg"
+						  {...register(`options.${index}.image`)}
+						  className="text-sm"
+						/>
 
-          {/* Right Column - Settings */}
-          <div className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-accent" />
-                    <CardTitle>Poll Settings</CardTitle>
-                  </div>
-                  <CardDescription>Customize how your poll works</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Weighted Votes */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="weighted" className="text-sm font-medium">
-                        Weighted Votes
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Wallet votes count more than anonymous votes
-                      </p>
-                    </div>
-                    <Switch
-                      id="weighted"
-                      checked={weightedVotes}
-                      onCheckedChange={setWeightedVotes}
-                    />
-                  </div>
+						<Controller
+						  name={`options.${index}.image`}
+						  control={control}
+						  render={({ field }) =>
+							field.value ? (
+							  <div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
+								<img
+								  src={field.value}
+								  alt={`Option ${index + 1} preview`}
+								  className="w-full h-full object-cover"
+								  onError={(e) => {
+									e.currentTarget.src =
+									  "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
+								  }}
+								/>
+							  </div>
+							) : null
+						  }
+						/>
+					  </div>
+					</motion.div>
+				  ))}
 
-                  {/* Multiple Choice */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="multiple" className="text-sm font-medium">
-                        Multiple Choice
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Allow voters to select multiple options
-                      </p>
-                    </div>
-                    <Switch
-                      id="multiple"
-                      checked={multipleChoice}
-                      onCheckedChange={setMultipleChoice}
-                    />
-                  </div>
+				  <Button
+					variant="outline"
+					onClick={() =>
+					  append({
+						name: "",
+						caption: "",
+						image:
+						  "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
+					  })
+					}
+					className="w-full border-dashed border-2 hover:border-accent hover:text-accent"
+				  >
+					<Plus className="w-4 h-4 mr-2" />
+					Add Another Option
+				  </Button>
+				</CardContent>
+			  </Card>
+			</motion.div>
+		  </div>
 
-                  {/* Require Wallet */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="wallet" className="text-sm font-medium">
-                        Require Wallet
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Only wallet users can vote
-                      </p>
-                    </div>
-                    <Switch
-                      id="wallet"
-                      checked={requireWallet}
-                      onCheckedChange={setRequireWallet}
-                    />
-                  </div>
+		  {/* Right Column - Settings */}
+		  <div className="space-y-6">
+			<motion.div
+			  initial={{ opacity: 0, y: 20 }}
+			  animate={{ opacity: 1, y: 0 }}
+			  transition={{ duration: 0.4, delay: 0.2 }}
+			>
+			  <Card>
+				<CardHeader>
+				  <div className="flex items-center gap-2">
+					<Settings className="w-5 h-5 text-accent" />
+					<CardTitle>Poll Settings</CardTitle>
+				  </div>
+				  <CardDescription>Customize how your poll works</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-6">
+				  <Controller
+					name="config.weightedVotes"
+					control={control}
+					render={({ field }) => (
+					  <div className="flex items-start justify-between gap-4">
+						<div className="space-y-1">
+						  <Label htmlFor="weighted" className="text-sm font-medium">
+							Weighted Votes
+						  </Label>
+						  <p className="text-xs text-muted-foreground">
+							Wallet votes count more than anonymous votes
+						  </p>
+						</div>
+						<Switch
+						  id="weighted"
+						  checked={field.value}
+						  onCheckedChange={field.onChange}
+						/>
+					  </div>
+					)}
+				  />
 
-                  {/* Show Results */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="results" className="text-sm font-medium">
-                        Show Results
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Display live vote counts
-                      </p>
-                    </div>
-                    <Switch
-                      id="results"
-                      checked={showResults}
-                      onCheckedChange={setShowResults}
-                    />
-                  </div>
+				  <Controller
+					name="config.multipleChoice"
+					control={control}
+					render={({ field }) => (
+					  <div className="flex items-start justify-between gap-4">
+						<div className="space-y-1">
+						  <Label htmlFor="multiple" className="text-sm font-medium">
+							Multiple Choice
+						  </Label>
+						  <p className="text-xs text-muted-foreground">
+							Allow voters to select multiple options
+						  </p>
+						</div>
+						<Switch
+						  id="multiple"
+						  checked={field.value}
+						  onCheckedChange={field.onChange}
+						/>
+					  </div>
+					)}
+				  />
 
-                  {/* Poll Duration */}
-                  <div className="space-y-2">
-                    <Label htmlFor="duration" className="text-sm font-medium">
-                      Poll Duration
-                    </Label>
-                    <select
-                      id="duration"
-                      value={pollDuration}
-                      onChange={(e) => setPollDuration(e.target.value)}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    >
-                      <option value="1">1 Day</option>
-                      <option value="3">3 Days</option>
-                      <option value="7">7 Days</option>
-                      <option value="14">14 Days</option>
-                      <option value="30">30 Days</option>
-                      <option value="0">No Expiration</option>
-                    </select>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+				  <Controller
+					name="config.requireWallet"
+					control={control}
+					render={({ field }) => (
+					  <div className="flex items-start justify-between gap-4">
+						<div className="space-y-1">
+						  <Label htmlFor="wallet" className="text-sm font-medium">
+							Require Wallet
+						  </Label>
+						  <p className="text-xs text-muted-foreground">
+							Only wallet users can vote
+						  </p>
+						</div>
+						<Switch
+						  id="wallet"
+						  checked={field.value}
+						  onCheckedChange={field.onChange}
+						/>
+					  </div>
+					)}
+				  />
 
-            {/* Preview Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
-              <Card className="bg-accent/5 border-accent/20">
-                <CardHeader>
-                  <CardTitle className="text-sm">Quick Tips</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-xs text-muted-foreground">
-                  <p>• Use clear, concise option names</p>
-                  <p>• Add images to make options more engaging</p>
-                  <p>• Enable weighted votes for serious polls</p>
-                  <p>• Set appropriate duration based on topic</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    </div>
+				  <Controller
+					name="config.showResults"
+					control={control}
+					render={({ field }) => (
+					  <div className="flex items-start justify-between gap-4">
+						<div className="space-y-1">
+						  <Label htmlFor="results" className="text-sm font-medium">
+							Show Results
+						  </Label>
+						  <p className="text-xs text-muted-foreground">
+							Display live vote counts
+						  </p>
+						</div>
+						<Switch
+						  id="results"
+						  checked={field.value}
+						  onCheckedChange={field.onChange}
+						/>
+					  </div>
+					)}
+				  />
+
+				  <div className="space-y-2">
+					<Label htmlFor="duration" className="text-sm font-medium">
+					  Poll Duration
+					</Label>
+					<select
+					  id="duration"
+					  {...register("duration")}
+					  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+					>
+					  <option value="1">1 Day</option>
+					  <option value="3">3 Days</option>
+					  <option value="7">7 Days</option>
+					  <option value="14">14 Days</option>
+					  <option value="30">30 Days</option>
+					  <option value="0">No Expiration</option>
+					</select>
+				  </div>
+				</CardContent>
+			  </Card>
+			</motion.div>
+
+			{/* Quick Tips */}
+			<motion.div
+			  initial={{ opacity: 0, y: 20 }}
+			  animate={{ opacity: 1, y: 0 }}
+			  transition={{ duration: 0.4, delay: 0.3 }}
+			>
+			  <Card className="bg-accent/5 border-accent/20">
+				<CardHeader>
+				  <CardTitle className="text-sm">Quick Tips</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-2 text-xs text-muted-foreground">
+				  <p>• Use clear, concise option names</p>
+				  <p>• Add images to make options more engaging</p>
+				  <p>• Enable weighted votes for serious polls</p>
+				  <p>• Set appropriate duration based on topic</p>
+				</CardContent>
+			  </Card>
+			</motion.div>
+		  </div>
+		</div>
+	  </div>
+	</div>
   );
 };
 
