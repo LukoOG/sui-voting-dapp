@@ -34,7 +34,7 @@ public struct PollRegistery has key{
 
 public struct PollConfig has store, drop {
 		//setting fields
-	allow_anon_vote: bool, //allow creators to allow or disallow anon users from voting
+	allow_anon_vote: bool, //allow creators to allow or prevent anon users from voting
 	allow_multiple_choice: bool,
 	allow_weighted: bool, //wallet votes count more than anon votes
 }
@@ -182,11 +182,9 @@ public fun createCreatePollRequest(
 }
 
 //Tx functions
-
-//this will fail if the create hot potato constructor didn't succeed
 public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
 	//assert!();
-	let CreatePollRequest { title, description, thumbnail_url, duration, options, poll_config } = createPollRequest;
+	let CreatePollRequest { title, description, thumbnail_url, duration, options, poll_config } = createPollRequest; //input validation done on request constructor
 
 
 	let poll = Poll { 
