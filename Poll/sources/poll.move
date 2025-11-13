@@ -253,7 +253,7 @@ public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx:
 		table::add(&mut poll.voters, owner, option_index);
 	}else{
 		let anon_id = anon.extract();
-		assert!(table::contains(&poll.anon_voters, anon_id));
+		assert!(!table::contains(&poll.anon_voters, anon_id), EAlreadyVoted);
 		assert!(weight == 1, 12); //anonymous weight must always be 1
 		table::add(&mut poll.anon_voters, anon_id, option_index);
 	};
