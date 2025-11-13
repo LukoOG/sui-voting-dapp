@@ -1,7 +1,7 @@
 export type Option = {
 	name: string,
-	image: string | null,
-	caption: string	| null,
+	image: string | null | undefined,
+	caption: string	| null | undefined,
 }
 
 export interface createPollArgs { 

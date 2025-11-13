@@ -9,8 +9,8 @@ export const pollSchema = z.object({
     .array(
       z.object({
         name: z.string().min(1, "Option name is required"),
-        image: z.string().url().optional(),
-        caption: z.string().optional(),
+        image: z.string().url(),
+        caption: z.string(),
       })
     )
     .min(2, "At least two options required"),

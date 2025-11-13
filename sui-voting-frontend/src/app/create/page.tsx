@@ -1,14 +1,11 @@
 "use client";
 import Image from "next/image";
-
 import { toast } from "sonner";
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { pollSchema } from "@/lib/schemas/poll.schema";
-
-import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { Plus, X, Image as ImageIcon, Settings, Waves, ArrowLeft } from "lucide-react";
@@ -22,15 +19,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useCurrentAccount } from "@mysten/dapp-kit";
 
 import { usePollActions } from "@/hooks/handlePollActions";
-import type { Option } from "@/lib/types"
 //import { useNavigate } from "react-router-dom";
-
-const DEFAULT_DURATION: number = 604800000 //1 week
 
 //const getDuration = ():number | null => null 
 
 //id to help map mutations
-type PollOption = { id: string } & Option;
 type PollForm = z.infer<typeof pollSchema>;
 const DEFAULT_IMAGE = "https://tse3.mm.bing.net/th/id/OIP.vOD46Vt53-lH0WoF-nSq-AHaFj?w=963&h=722&rs=1&pid=ImgDetMain&o=7&rm=3";
 
@@ -43,6 +36,7 @@ const CreatePoll = () => {
     register,
     control,
     handleSubmit,
+	reset,
     formState: { errors },
   } = useForm<PollForm>({
     resolver: zodResolver(pollSchema),
@@ -81,18 +75,18 @@ const CreatePoll = () => {
 			"0": 0,
 		  };
 		  await createPoll.mutateAsync({
-			address: account?.address!,
+			address: account?.address as string,
 			title: data.title,
 			description: data.description ?? "",
 			thumbnail: data.thumbnail,
 			duration: durationMap[data.duration],
 			options: data.options,
-			config: Object.values(data.config).slice(0, 3),
+			config: Object?.values(data.config).slice(0, 3),
 		  });
 		  
 		  toast.dismiss(toastId);
 		  toast.success("Poll created successfully!");
-		  form.reset();
+		  reset();
 		} catch (e) {
 		  console.error(e);
 		  toast.dismiss(toastId);
@@ -110,7 +104,7 @@ const CreatePoll = () => {
 			<Button
 			  variant="ghost"
 			  size="icon"
-			  onClick={() => navigate("/")}
+			  onClick={() => navigate()}
 			  className="text-muted-foreground hover:text-accent"
 			>
 			  <ArrowLeft className="w-5 h-5" />
@@ -190,28 +184,34 @@ const CreatePoll = () => {
 					  {...register("thumbnail")}
 					  className="text-sm"
 					/>
-					{errors.image && (
-					  <p className="text-xs text-destructive mt-1">{errors.image.message}</p>
+					{errors.thumbnail && (
+					  <p className="text-xs text-destructive mt-1">{errors.thumbnail.message}</p>
 					)}
 
 					{/* Preview */}
 					<Controller
-					  name="image"
+					  name="thumbnail"
 					  control={control}
-					  render={({ field }) =>
-						field.value ? (
-						  <div className="mt-2 relative h-40 rounded-md overflow-hidden border border-border">
-							<img
-							  src={field.value}
-							  alt="Poll thumbnail preview"
-							  className="w-full h-full object-cover"
-							  onError={(e) => {
-								e.currentTarget.src =
-								  "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
-							  }}
-							/>
+					  render={({ field }) =>(
+						<>
+						{field.value && <div className="mt-2 relative h-40 rounded-md overflow-hidden border border-border">
+						<Image
+						height={1024}
+						width={720}
+						  src={field.value || "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop"}
+						  alt="Poll thumbnail preview"
+						  fill
+						  className="object-cover rounded-md"
+						  onError={(e) => {
+							const target = e.target as HTMLImageElement;
+							target.src =
+							  "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
+						  }}
+						/>
 						  </div>
-						) : null
+						}
+						</>
+						)
 					  }
 					/>
 				  </div>
@@ -296,9 +296,13 @@ const CreatePoll = () => {
 						  name={`options.${index}.image`}
 						  control={control}
 						  render={({ field }) =>
-							field.value ? (
+							 (
+							 <>
+							 { field.value && 
 							  <div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
-								<img
+								<Image
+								height={1024}
+								width={720}
 								  src={field.value}
 								  alt={`Option ${index + 1} preview`}
 								  className="w-full h-full object-cover"
@@ -308,7 +312,9 @@ const CreatePoll = () => {
 								  }}
 								/>
 							  </div>
-							) : null
+							 }
+							 </>
+							)
 						  }
 						/>
 					  </div>
