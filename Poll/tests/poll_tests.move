@@ -5,6 +5,7 @@ use poll::{version, poll};
 //use sui::table;
 use sui::clock::{Self, Clock};
 use sui::test_scenario as ts;
+use sui::table;
 use std::debug::print;
 use std::string::String;
 
@@ -192,6 +193,13 @@ fun test_wallet_poll_vote(){
 	assert!(voter == scenario.ctx().sender(), 1);
 	assert!(index == 1, 1);
 	assert!(weight == 1, 1);
+	let ( votes_table, _, _ ) = poll::poll_tables(&poll);
+	
+	let count = table::borrow(votes_table, *index); //option index voted for. Expect 1
+	let count_2 = table::borrow(votes_table, 0);  //option index not voted for. Expect 0
+	
+	assert!(count == 1, 1);
+	assert!(count_2 == 0, 1);
 	
 	//print(voter);
 	//print(weight);
@@ -201,5 +209,68 @@ fun test_wallet_poll_vote(){
 	clock.destroy_for_testing();
 	poll::destroy_poll(poll);
 	poll::destroy_receipt(receipt);
+	scenario.end();	
+}
+
+#[test, expected_failure(abort_code = ::poll::poll::EAlreadyVoted)]
+fun test_double_wallet_poll_vote(){
+	let mut scenario = ts::begin(User1);
+	
+	let clock = clock::create_for_testing(scenario.ctx());
+	clock.share_for_testing();
+	poll::create_poll_registery_for_testing(scenario.ctx());
+	version::create_version_for_testing(scenario.ctx());
+	
+	scenario.next_tx(User1);
+	
+	//variables
+	let title = b"Test Poll".to_string();
+	let description = option::some<String>(b"This poll is to test the smart contract".to_string());
+	let thumbnail_url = b"This poll is to test the smart contract".to_string();
+	let duration: u64 = 34;
+	let option_names = vector<String>[b"12".to_string(), b"23".to_string()];
+	let option_images = vector<option::Option<String>>[option::none(), option::none()];
+	let option_captions = vector<option::Option<String>>[option::none()];
+	let config_bools = vector[true, true, true];
+	
+	let clock = scenario.take_shared<Clock>();
+	let mut registery = scenario.take_shared<poll::PollRegistery>();
+	let version = scenario.take_shared<version::Version>();
+	
+	let create_poll_request = poll::createCreatePollRequest(
+		&version,
+		title,
+		description,
+		thumbnail_url,
+		duration,
+		option_names,
+		option_images,
+		option_captions,
+		config_bools,
+		scenario.ctx()
+	);
+	
+	//print(&create_poll_request); //for human crosschecking
+	let mut poll: poll::Poll = poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
+	//print(&poll);
+	
+	//Voting Process
+	let ticket = poll::createVoteTicket(1, scenario.ctx().sender(), false, 1);
+	let ticket_2 = poll::createVoteTicket(0, scenario.ctx().sender(), false, 1);
+	
+	let receipt = poll::vote_on_poll(&mut poll, ticket, scenario.ctx());
+	let invalid_receipt = poll::vote_on_poll(&mut poll, ticket_2, scenario.ctx()); //expected to fail
+	
+	//print(voter);
+	//print(weight);
+	
+	
+	//destroy values
+	ts::return_shared(registery);
+	ts::return_shared(version);
+	clock.destroy_for_testing();
+	poll::destroy_poll(poll);
+	poll::destroy_receipt(receipt);
+	poll::destroy_receipt(invalid_receipt);
 	scenario.end();	
 }

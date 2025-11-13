@@ -272,6 +272,11 @@ public(package) fun poll_fields(self: &mut Poll): (&u64, &String, &mut option::O
 	(&self.poll_id, &self.title, &mut self.description, &self.creator, &self.start_time, &self.close_time, &self.is_active)
 }
 
+#[test_only]
+public(package) fun poll_tables(self: &Poll): (&table::Table<u64, u64>, &table::Table<address, u64>, &table::Table<ID, u64>) {
+	(&self.votes, &self.voters, &self.anon_voters)
+}
+
 public(package) fun receipt_fields(self: &VoteReceipt): (&ID, &address, &u64, &u8) { 
 	(&self.poll_id, &self.voter, &self.option_index, &self.weight)
 }
