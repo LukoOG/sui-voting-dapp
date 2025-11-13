@@ -7,10 +7,15 @@ use sui::display;
 use sui::clock::Clock;
 
 ///Errors
+const EInvalidOption: u64 = 11;
 const EInvalidNoOfOptions: u64 = 12;
 const EUnequalLength :u64 = 13;
 const EInvalidConfigLength: u64 = 15;
 const EAlreadyVoted: u64 = 16;
+
+const EPollClosed: u64 = 102;
+const EPollNotActive: u64 = 103;
+const EPollNotStarted: u64 = 105;
 
 
 ///constants
@@ -66,7 +71,6 @@ public struct PollOption has store, drop {
     caption: Option<String>,
 }
 
-#[allow(unused_field)]
 public struct VoteTicket {
 	option_index: u64,
 	owner: address,
@@ -183,7 +187,8 @@ public fun createCreatePollRequest(
 	CreatePollRequest { title, description: desc, thumbnail_url, duration, options: poll_options, poll_config: setConfiguration(poll_config_bools) }
 }
 
-public fun createVoteTicket(option: u64, owner: address, is_anon: bool, weight: u8 ): VoteTicket {
+public fun createVoteTicket(version: &poll::version::Version, option: u64, owner: address, is_anon: bool, weight: u8 ): VoteTicket {
+	poll::version::check_is_valid(version);
 	VoteTicket{ option_index: option, owner, is_anon, weight }	
 }
 
@@ -224,14 +229,21 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	poll
 }
 
-public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, ctx: &mut TxContext): VoteReceipt{
+public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx: &mut TxContext): VoteReceipt{
 	let VoteTicket { option_index, owner, is_anon, weight } = ticket;
+	
+	assert!(poll.is_active, EPollNotActive);
+    let now = clock.timestamp_ms();
+    assert!(now >= poll.start_time, EPollNotStarted);
+    assert!(now < poll.close_time, EPollClosed);
+	
+	assert!(option_index < vector::length(&poll.options), EInvalidOption);
+
 	
 	if(is_anon == false){
 		assert!(!table::contains(&poll.voters, owner), EAlreadyVoted); //prevent double voting
+		table::add(&mut poll.voters, owner, option_index);
 	};
-	
-	table::add(&mut poll.voters, owner, option_index);
 	
 	let count = table::borrow_mut<u64, u64>(&mut poll.votes, option_index);
     *count = *count + (1 * weight as u64);
@@ -243,6 +255,7 @@ entry fun close_poll(_ctx: &mut TxContext){
 	abort 0
 }
 
+public(package) fun borrow_mut_poll_id(self: &mut Poll): &mut UID { &mut self.id }
 
 #[test_only]
 use sui::test_scenario as ts;

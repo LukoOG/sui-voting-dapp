@@ -184,9 +184,9 @@ fun test_wallet_poll_vote(){
 	//print(&poll);
 	
 	//Voting Process
-	let ticket = poll::createVoteTicket(1, scenario.ctx().sender(), false, 1);
+	let ticket = poll::createVoteTicket(&version, 1, scenario.ctx().sender(), false, 1);
 	
-	let receipt = poll::vote_on_poll(&mut poll, ticket, scenario.ctx());
+	let receipt = poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
 	
 	let (_id, voter, index, weight) = poll::receipt_fields(&receipt);
 	
@@ -255,11 +255,11 @@ fun test_double_wallet_poll_vote(){
 	//print(&poll);
 	
 	//Voting Process
-	let ticket = poll::createVoteTicket(1, scenario.ctx().sender(), false, 1);
-	let ticket_2 = poll::createVoteTicket(0, scenario.ctx().sender(), false, 1);
+	let ticket = poll::createVoteTicket(&version, 1, scenario.ctx().sender(), false, 1);
+	let ticket_2 = poll::createVoteTicket(&version, 0, scenario.ctx().sender(), false, 1);
 	
-	let receipt = poll::vote_on_poll(&mut poll, ticket, scenario.ctx());
-	let invalid_receipt = poll::vote_on_poll(&mut poll, ticket_2, scenario.ctx()); //expected to fail
+	let receipt = poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
+	let invalid_receipt = poll::vote_on_poll(&mut poll, ticket_2, &clock, scenario.ctx()); //expected to fail
 	
 	//print(voter);
 	//print(weight);

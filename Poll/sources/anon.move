@@ -1,20 +1,16 @@
-#[allow(unused_field)]
 module poll::anon;
 
 //imports
-//use std::string::{Self, String};
+use sui::derived_object;
+use poll::poll;
 
 //structs
-public struct Anon has store, drop {
-	id: ID,
-}
-
-//can only be created after specific conditions are met - regulated by the frontend
-public struct AnonVoteTicket {
-	id: ID
+public struct Anon has key, store{ //destroyed on vote
+	id: UID,
 }
 
 ///functions
-public fun createAnonVoteTicket(_ctx: TxContext){
-	abort 0
+public fun claim_anon(parent: &mut poll::Poll, key: u64): Anon{
+	let derived_uid = derived_object::claim<u64>(poll::borrow_mut_poll_id(parent), key);
+	Anon { id: derived_uid }
 }
