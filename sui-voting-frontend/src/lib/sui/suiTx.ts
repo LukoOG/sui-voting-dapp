@@ -1,7 +1,7 @@
 //Sui helper functions
 import { Transaction } from "@mysten/sui/transactions";
 import suiEnv from "@/lib/sui/suiEnv";
-import { createPollArgs } from "@/lib/types"
+import { createPollArgs, votePollArgs } from "@/lib/types"
 
 export const createPollTx =  ({ title, description, thumbnail, duration, options, config }: createPollArgs, address: string) => {
 	const tx = new Transaction()
@@ -35,5 +35,33 @@ export const createPollTx =  ({ title, description, thumbnail, duration, options
 	});
 	
 	tx.transferObjects([poll], address)
+	return tx
+}
+
+export const votePollTx = ({ poll_id, option_index, owner, is_anonymous, weight } :votePollArgs, address: string) => {
+	const tx = new Transaction();
+	
+	const ticket = tx.moveCall({
+		target: `${suiEnv.packageId}::poll::createVoteTicket`,
+		arguments: [
+			tx.pure.u64(option_index),
+			tx.pure.address(owner),
+			tx.pure.bool(is_anonymous),
+			tx.pure.u8(weight),
+		],
+		typeArguments: [],
+	});
+	
+	const voteReceipt = tx.moveCall({
+		target: `${suiEnv.packageId}::poll::vote_on_poll`,
+		arguments: [
+			tx.object(poll_id),
+			tx.object(suiEnv.versionObject),
+			ticket,
+		],
+		typeArguments: [],
+	});
+	
+	tx.transferObjects([voteReceipt], address);
 	return tx
 }

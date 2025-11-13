@@ -12,3 +12,11 @@ export interface createPollArgs {
 	options: Option[],
 	config: boolean[],
 };
+
+export interface votePollArgs {
+	poll_id: string,
+	option_index: number,
+	owner: string,
+	is_anonymous: boolean,
+	weight: number,
+};

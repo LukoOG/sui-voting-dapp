@@ -1,10 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
-import { createPollTx } from "@/lib/sui/suiTx";
-import { createPollArgs } from "@/lib/types"
+import { createPollTx, votePollTx } from "@/lib/sui/suiTx";
+import { createPollArgs, votePollArgs } from "@/lib/types";
 
-//interfaces
-type createPollArgsT = createPollArgs & { address: string }
+//interfaces & types
+type createPollArgsT = createPollArgs & { address: string };
+type votePollArgsT = votePollArgs & { address: string };
 
 export const usePollActions = () => {
     const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
@@ -25,5 +26,19 @@ export const usePollActions = () => {
 		onError: () => {},
 	});
 	
-	return { createPoll };
+	const walletVote = useMutation({
+		mutationFn: async (args: votePollArgsT) => {
+			const tx = votePollTx(args, args.address);
+			
+			const result = await signAndExecuteTransaction({ transaction: tx });
+			await suiClient.waitForTransaction({ digest: result.digest });
+
+			return result;
+		},
+		
+		onSuccess: () => {},
+		onError: () => {},
+	})
+	
+	return { createPoll, walletVote };
 }
