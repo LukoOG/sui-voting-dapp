@@ -10,6 +10,7 @@ use sui::clock::Clock;
 const EInvalidNoOfOptions: u64 = 12;
 const EUnequalLength :u64 = 13;
 const EInvalidConfigLength: u64 = 15;
+const EAlreadyVoted: u64 = 16;
 
 
 ///constants
@@ -59,7 +60,7 @@ public struct Poll has key, store{
 
 
 public struct PollOption has store, drop {
-    id: u64,
+    id: u64, //option index
     name: String,
     image_url: Option<String>,
     caption: Option<String>,
@@ -67,9 +68,9 @@ public struct PollOption has store, drop {
 
 #[allow(unused_field)]
 public struct VoteTicket {
-	option: u64,
+	option_index: u64,
 	owner: address,
-	is_anon: String,
+	is_anon: bool,
 	weight: u8,
 }
 
@@ -79,6 +80,7 @@ public struct VoteReceipt has key {
 	poll_id: ID,
 	voter: address,
 	option_index: u64,
+	weight: u8,
 }
 
 //events
@@ -181,12 +183,25 @@ public fun createCreatePollRequest(
 	CreatePollRequest { title, description: desc, thumbnail_url, duration, options: poll_options, poll_config: setConfiguration(poll_config_bools) }
 }
 
+public fun createVoteTicket(option: u64, owner: address, is_anon: bool, weight: u8 ): VoteTicket {
+	VoteTicket{ option_index: option, owner, is_anon, weight }	
+}
+
 //Tx functions
 public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
 	//assert!();
 	let CreatePollRequest { title, description, thumbnail_url, duration, options, poll_config } = createPollRequest; //input validation done on request constructor
-
-
+	
+	//Build votes table
+	let mut index = 0;
+	let length = options.length();
+	let mut votes_table = table::new<u64, u64>(ctx);
+	
+	while(index < length){
+		table::add<u64, u64>(&mut votes_table, copy index, 0);
+		index = index+ 1;
+	};
+	
 	let poll = Poll { 
 				id: object::new(ctx),
 				poll_id: registery.next_poll_id,
@@ -197,7 +212,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 				close_time: set_duration(duration, clock),
 				poll_config,
 				options,
-				votes: table::new<u64, u64>(ctx),
+				votes: votes_table,
 				voters: table::new<address, u64>(ctx),
 				anon_voters: table::new<ID, u64>(ctx),
 	};
@@ -209,8 +224,19 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	poll
 }
 
-public fun vote_on_poll(_ctx: &mut TxContext){//:(VoteReceipt){
-	abort 0
+public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, ctx: &mut TxContext): VoteReceipt{
+	let VoteTicket { option_index, owner, is_anon, weight } = ticket;
+	
+	if(is_anon == false){
+		assert!(!table::contains(&poll.voters, owner), EAlreadyVoted); //prevent double voting
+	};
+	
+	table::add(&mut poll.voters, owner, option_index);
+	
+	let count = table::borrow_mut<u64, u64>(&mut poll.votes, option_index);
+    *count = *count + (1 * weight as u64);
+
+	VoteReceipt { id: object::new(ctx), poll_id: object::uid_to_inner(&poll.id), voter: owner, option_index, weight }
 }
 
 entry fun close_poll(_ctx: &mut TxContext){
@@ -246,12 +272,22 @@ public(package) fun poll_fields(self: &mut Poll): (&u64, &String, &mut option::O
 	(&self.poll_id, &self.title, &mut self.description, &self.creator, &self.start_time, &self.close_time, &self.is_active)
 }
 
+public(package) fun receipt_fields(self: &VoteReceipt): (&ID, &address, &u64, &u8) { 
+	(&self.poll_id, &self.voter, &self.option_index, &self.weight)
+}
+
 #[test_only]
 public(package) fun destroy_poll(poll: Poll) { 
 	let Poll { id, voters, votes, anon_voters, .. } = poll;
 	table::drop(voters);
 	table::drop(votes);
 	table::drop(anon_voters);
+	id.delete();
+}
+
+#[test_only]
+public(package) fun destroy_receipt(receipt: VoteReceipt) { 
+	let VoteReceipt { id, .. } = receipt;
 	id.delete();
 }
 
