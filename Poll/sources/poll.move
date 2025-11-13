@@ -75,6 +75,7 @@ public struct VoteTicket {
 	option_index: u64,
 	owner: address,
 	is_anon: bool,
+	anon: option::Option<ID>,
 	weight: u8,
 }
 
@@ -187,9 +188,16 @@ public fun createCreatePollRequest(
 	CreatePollRequest { title, description: desc, thumbnail_url, duration, options: poll_options, poll_config: setConfiguration(poll_config_bools) }
 }
 
-public fun createVoteTicket(version: &poll::version::Version, option: u64, owner: address, is_anon: bool, weight: u8 ): VoteTicket {
+public fun createVoteTicket(version: &poll::version::Version, poll: &mut Poll,option: u64, owner: address, is_anon: bool, mut key: option::Option<vector<u8>>, weight: u8 ): VoteTicket {
 	poll::version::check_is_valid(version);
-	VoteTicket{ option_index: option, owner, is_anon, weight }	
+	let anon_id = if(is_anon){ 
+		let extracted_key = option::extract(&mut key);		
+		let id = poll::anon::claim_anon(&mut poll.id, extracted_key);
+		option::some(id)
+	} else { 
+		option::none() 
+	};
+	VoteTicket{ option_index: option, owner, is_anon, anon: anon_id, weight }	
 }
 
 //Tx functions
@@ -230,7 +238,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 }
 
 public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx: &mut TxContext): VoteReceipt{
-	let VoteTicket { option_index, owner, is_anon, weight } = ticket;
+	let VoteTicket { option_index, owner, is_anon, mut anon, weight } = ticket;
 	
 	assert!(poll.is_active, EPollNotActive);
     let now = clock.timestamp_ms();
@@ -243,6 +251,11 @@ public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx:
 	if(is_anon == false){
 		assert!(!table::contains(&poll.voters, owner), EAlreadyVoted); //prevent double voting
 		table::add(&mut poll.voters, owner, option_index);
+	}else{
+		let anon_id = anon.extract();
+		assert!(table::contains(&poll.anon_voters, anon_id));
+		assert!(weight == 1, 12); //anonymous weight must always be 1
+		table::add(&mut poll.anon_voters, anon_id, option_index);
 	};
 	
 	let count = table::borrow_mut<u64, u64>(&mut poll.votes, option_index);

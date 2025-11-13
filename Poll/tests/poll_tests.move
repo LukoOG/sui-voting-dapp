@@ -184,7 +184,8 @@ fun test_wallet_poll_vote(){
 	//print(&poll);
 	
 	//Voting Process
-	let ticket = poll::createVoteTicket(&version, 1, scenario.ctx().sender(), false, 1);
+	let key = option::some(b"key for anon");
+	let ticket = poll::createVoteTicket(&version, &mut poll, 1, scenario.ctx().sender(), false, key, 1);
 	
 	let receipt = poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
 	
@@ -255,8 +256,9 @@ fun test_double_wallet_poll_vote(){
 	//print(&poll);
 	
 	//Voting Process
-	let ticket = poll::createVoteTicket(&version, 1, scenario.ctx().sender(), false, 1);
-	let ticket_2 = poll::createVoteTicket(&version, 0, scenario.ctx().sender(), false, 1);
+	let key = option::some(b"key for anon");
+	let ticket = poll::createVoteTicket(&version, &mut poll, 1, scenario.ctx().sender(), false, key, 1);
+	let ticket_2 = poll::createVoteTicket(&version, &mut poll, 0, scenario.ctx().sender(), false, key, 1);
 	
 	let receipt = poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
 	let invalid_receipt = poll::vote_on_poll(&mut poll, ticket_2, &clock, scenario.ctx()); //expected to fail
