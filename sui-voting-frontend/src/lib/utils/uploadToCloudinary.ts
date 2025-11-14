@@ -1,6 +1,21 @@
+import imageCompression from "browser-image-compression";
+
+const MAX_SIZE = 10 * 1024 * 1024;
+
 export async function uploadToCloudinary(file: File): Promise<string> {
+  let uploadFile = file;
+
+  if (file.size > MAX_SIZE) {
+    uploadFile = await imageCompression(file, {
+      maxSizeMB: 9.5,              
+      maxWidthOrHeight: 1800,      
+      useWebWorker: true,
+      fileType: file.type.includes("png") ? "image/png" : undefined,
+    });
+  }
+	
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", uploadFile);
   formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_PRESET!);
 
   const res = await fetch(
