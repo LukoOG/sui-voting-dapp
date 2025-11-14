@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+import { uploadToCloudinary } from "@/lib/utils/uploadToCloudinary";
+
 import { useCurrentAccount } from "@mysten/dapp-kit";
 
 import { usePollActions } from "@/hooks/handlePollActions";
@@ -25,7 +27,7 @@ import { usePollActions } from "@/hooks/handlePollActions";
 
 //id to help map mutations
 type PollForm = z.infer<typeof pollSchema>;
-const DEFAULT_IMAGE = "https://tse3.mm.bing.net/th/id/OIP.vOD46Vt53-lH0WoF-nSq-AHaFj?w=963&h=722&rs=1&pid=ImgDetMain&o=7&rm=3";
+const DEFAULT_IMAGE = "https://res.cloudinary.com/dfxieiol1/image/upload/v1763136116/sui_banner2_baub9o.webp";
 
 const CreatePoll = () => {
   const navigate = () => ("navigetd") //useNavigate();
@@ -36,6 +38,8 @@ const CreatePoll = () => {
     register,
     control,
     handleSubmit,
+	watch,
+	setValue,
 	reset,
     formState: { errors },
   } = useForm<PollForm>({
@@ -43,11 +47,12 @@ const CreatePoll = () => {
     defaultValues: {
       title: "",
       thumbnail: DEFAULT_IMAGE,
+      thumbnailFile: undefined,
       description: "",
       duration: "7",
       options: [
-        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: "" },
-        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", caption: "" },
+        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", imageFile: undefined, caption: "" },
+        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", imageFile: undefined, caption: "" },
       ],
       config: {
         weightedVotes: false,
@@ -74,13 +79,38 @@ const CreatePoll = () => {
 			"30": 30 * 86400000,
 			"0": 0,
 		  };
+		  
+		  let thumbnailUrl = data.thumbnail ?? "";
+		  
+		  const thumbnailFile = data.thumbnailFile as File | undefined;
+		  if(thumbnailFile instanceof File){
+			thumbnailUrl = await uploadToCloudinary(thumbnailFile);
+		  };
+		  
+		  const resolvedOptions = await Promise.all(
+			data.options.map( async(opt)=>{
+				let imageUrl = opt.image ?? "";
+				
+				const file = opt.imageFile as File | undefined;
+				if (file instanceof File) {
+				  imageUrl = await uploadToCloudinary(file);
+				}
+				
+				return {
+					...opt,
+					image: imageUrl
+				}
+			} )
+		  )
+		console.log(resolvedOptions);
+		  
 		  await createPoll.mutateAsync({
 			address: account?.address as string,
 			title: data.title,
 			description: data.description ?? "",
-			thumbnail: data.thumbnail,
+			thumbnail: thumbnailUrl,
 			duration: durationMap[data.duration],
-			options: data.options,
+			options: resolvedOptions,
 			config: Object?.values(data.config).slice(0, 3),
 		  });
 		  
@@ -173,48 +203,59 @@ const CreatePoll = () => {
 					)}
 				  </div>
 
-				  <div className="space-y-2">
-					<div className="flex items-center gap-2">
-					  <ImageIcon className="w-4 h-4 text-muted-foreground" />
-					  <Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
-					</div>
-					<Input
-					  id="thumbnail"
-					  placeholder="https://example.com/thumbnail.jpg"
-					  {...register("thumbnail")}
-					  className="text-sm"
-					/>
-					{errors.thumbnail && (
-					  <p className="text-xs text-destructive mt-1">{errors.thumbnail.message}</p>
-					)}
+					<div className="space-y-2">
+					  <div className="flex items-center gap-2">
+						<ImageIcon className="w-4 h-4 text-muted-foreground" />
+						<Label htmlFor="thumbnail">Thumbnail Image (Optional)</Label>
+					  </div>
 
-					{/* Preview */}
-					<Controller
-					  name="thumbnail"
-					  control={control}
-					  render={({ field }) =>(
-						<>
-						{field.value && <div className="mt-2 relative h-40 rounded-md overflow-hidden border border-border">
-						<Image
-						height={1024}
-						width={720}
-						  src={field.value || "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop"}
-						  alt="Poll thumbnail preview"
-						  fill
-						  className="object-cover rounded-md"
-						  onError={(e) => {
-							const target = e.target as HTMLImageElement;
-							target.src =
-							  "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
+					  {/* URL input */}
+					  <Input
+						id="thumbnail"
+						placeholder="https://example.com/thumbnail.jpg"
+						{...register("thumbnail")}
+						className="text-sm"
+					  />
+					  {errors.thumbnail && (
+						<p className="text-xs text-destructive mt-1">{errors.thumbnail.message}</p>
+					  )}
+
+					  {/* File Upload */}
+					  <div className="space-y-2">
+						<Label>Upload Thumbnail (Optional)</Label>
+						<Input
+						  type="file"
+						  accept="image/*"
+						  onChange={(e) => {
+							const file = e.target.files?.[0];
+							setValue("thumbnailFile", file ?? undefined);
 						  }}
 						/>
+					  </div>
+
+					  {/* Unified Preview */}
+					  {(() => {
+						const file = watch("thumbnailFile");
+						const url = watch("thumbnail");
+
+						if (!file && !url) return null;
+
+						const previewSrc = file ? URL.createObjectURL(file) : url;
+
+						return (
+						  <div className="h-32 w-full overflow-hidden rounded-md border border-border">
+							<img
+							  src={previewSrc}
+							  className="w-full h-full object-cover"
+							  onError={(e) => {
+								(e.target as HTMLImageElement).src =
+								  "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
+							  }}
+							/>
 						  </div>
-						}
-						</>
-						)
-					  }
-					/>
-				  </div>
+						);
+					  })()}
+					</div>
 				</CardContent>
 			  </Card>
 			</motion.div>
@@ -280,44 +321,41 @@ const CreatePoll = () => {
 						/>
 					  </div>
 
-					  <div className="space-y-2">
-						<div className="flex items-center gap-2 text-sm text-muted-foreground">
-						  <ImageIcon className="w-4 h-4" />
-						  <Label htmlFor={`options.${index}.image`}>Image URL (Optional)</Label>
-						</div>
-						<Input
-						  id={`options.${index}.image`}
-						  placeholder="https://example.com/image.jpg"
-						  {...register(`options.${index}.image`)}
-						  className="text-sm"
-						/>
-
-						<Controller
-						  name={`options.${index}.image`}
-						  control={control}
-						  render={({ field }) =>
-							 (
-							 <>
-							 { field.value && 
-							  <div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
-								<Image
-								height={1024}
-								width={720}
-								  src={field.value}
-								  alt={`Option ${index + 1} preview`}
-								  className="w-full h-full object-cover"
-								  onError={(e) => {
-									e.currentTarget.src =
-									  "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=200&fit=crop";
-								  }}
-								/>
-							  </div>
-							 }
-							 </>
-							)
-						  }
-						/>
+					<div className="space-y-2">
+					  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+						<ImageIcon className="w-4 h-4" />
+						<span>Image URL (Optional)</span>
 					  </div>
+
+					  <Input
+						placeholder="https://example.com/image.jpg"
+						{...register(`options.${index}.image`)}
+					  />
+
+					  <Label className="text-sm">Upload Image (Optional)</Label>
+					  <Input
+						type="file"
+						accept="image/*"
+						onChange={(e) => {
+						  const file = e.target.files?.[0];
+						  if (file) setValue(`options.${index}.imageFile`, file);
+						}}
+					  />
+
+					  {/* Preview */}
+					  {(watch(`options.${index}.imageFile`) || watch(`options.${index}.image`)) && (
+						<div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
+						  <img
+							src={
+							  watch(`options.${index}.imageFile`)
+								? URL.createObjectURL(watch(`options.${index}.imageFile`))
+								: watch(`options.${index}.image`)
+							}
+							className="w-full h-full object-cover"
+						  />
+						</div>
+					  )}
+					</div>
 					</motion.div>
 				  ))}
 
@@ -329,6 +367,7 @@ const CreatePoll = () => {
 						caption: "",
 						image:
 						  "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
+						imageFile: undefined,
 					  })
 					}
 					className="w-full border-dashed border-2 hover:border-accent hover:text-accent"
