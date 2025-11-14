@@ -241,11 +241,14 @@ const CreatePoll = () => {
 						if (!file && !url) return null;
 
 						const previewSrc = file ? URL.createObjectURL(file) : url;
+						if(!previewSrc) return null;
 
 						return (
 						  <div className="h-32 w-full overflow-hidden rounded-md border border-border">
-							<img
+							<Image
+							height={600} fill
 							  src={previewSrc}
+							  alt={`thumbnail image on SuiVs for ${watch("thumbnail")}`}
 							  className="w-full h-full object-cover"
 							  onError={(e) => {
 								(e.target as HTMLImageElement).src =
@@ -272,8 +275,13 @@ const CreatePoll = () => {
 				  <CardDescription>Add choices for people to vote on (minimum 2)</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
-				  {fields.map((field, index) => (
-					<motion.div
+				  {fields.map((field, index) => {
+					    const optionImageFile = watch(`options.${index}.imageFile`);
+						const optionImageUrl = watch(`options.${index}.image`);
+						
+						const imageSrc = optionImageFile ? URL.createObjectURL(optionImageFile) : optionImageUrl ?? "";
+						
+					return ( <motion.div
 					  key={field.id}
 					  initial={{ opacity: 0, x: -20 }}
 					  animate={{ opacity: 1, x: 0 }}
@@ -343,21 +351,19 @@ const CreatePoll = () => {
 					  />
 
 					  {/* Preview */}
-					  {(watch(`options.${index}.imageFile`) || watch(`options.${index}.image`)) && (
+					  {imageSrc && (
 						<div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
-						  <img
-							src={
-							  watch(`options.${index}.imageFile`)
-								? URL.createObjectURL(watch(`options.${index}.imageFile`))
-								: watch(`options.${index}.image`)
-							}
+						  <Image height={600} fill
+						  alt={"image option on Sui VS"}
+							src={imageSrc}
 							className="w-full h-full object-cover"
 						  />
 						</div>
 					  )}
 					</div>
 					</motion.div>
-				  ))}
+					)
+				  })}
 
 				  <Button
 					variant="outline"
