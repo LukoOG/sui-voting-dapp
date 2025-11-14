@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { toast } from "sonner";
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -51,8 +50,8 @@ const CreatePoll = () => {
       description: "",
       duration: "7",
       options: [
-        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", imageFile: undefined, caption: "" },
-        { name: "", image: "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg", imageFile: undefined, caption: "" },
+        { name: "", image: "", imageFile: undefined, caption: "" },
+        { name: "", image: "", imageFile: undefined, caption: "" },
       ],
       config: {
         weightedVotes: false,
@@ -244,9 +243,8 @@ const CreatePoll = () => {
 						if(!previewSrc) return null;
 
 						return (
-						  <div className="h-32 w-full overflow-hidden rounded-md border border-border">
-							<Image
-							height={600} fill
+						  <div className="h-60 mx-auto w-fit overflow-hidden rounded-md border border-border">
+							<img
 							  src={previewSrc}
 							  alt={`thumbnail image on SuiVs for ${watch("thumbnail")}`}
 							  className="w-full h-full object-cover"
@@ -352,8 +350,8 @@ const CreatePoll = () => {
 
 					  {/* Preview */}
 					  {imageSrc && (
-						<div className="mt-2 relative h-32 rounded-md overflow-hidden border border-border">
-						  <Image height={600} fill
+						<div className="mt-2 relative h-60 mx-auto w-fit rounded-md overflow-hidden border border-border">
+						  <img
 						  alt={"image option on Sui VS"}
 							src={imageSrc}
 							className="w-full h-full object-cover"
