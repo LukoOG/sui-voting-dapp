@@ -32,14 +32,11 @@ const Navbar = () => {
             <nav className="hidden md:flex items-center space-x-6">
               <Link 
                 href="/explore" 
-
               >
                 Explore
               </Link>
               <Link 
                 href="/create"
-                
-                onClick={(e) => e.preventDefault()} // Placeholder
               >
                 Create Poll
               </Link>
