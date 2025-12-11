@@ -4,52 +4,67 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* 🌤️ Light Theme (Sui-inspired) */
-  --background: #f8fafc;
-  --background-alt: #eef6ff;
-  --surface: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --accent: #00b0ff; /* Sui blue */
-  --accent-hover: #0091ea;
-  --success: #4ade80;
-  --success-dark: #16a34a;
-  --border: #e2e8f0;
-  --glass: rgba(255, 255, 255, 0.6);
+  /* 🌤️ Light Theme — Standout, Flat, Clean */
+  --background: oklch(0.98 0 0); /* Almost white */
+  --foreground: oklch(0.20 0 0); /* Deep slate text */
 
-  /* Shadows & Glow */
-  --shadow-glow: 0 0 20px rgba(0, 176, 255, 0.3);
+  --card: oklch(0.97 0 0);
+  --card-foreground: oklch(0.20 0 0);
 
-  /* Extra system tokens (kept consistent with Tailwind theme tokens) */
+  --popover: oklch(0.98 0 0);
+  --popover-foreground: oklch(0.20 0 0);
+
+  /* Primary = Sui Blue, bold but not neon */
+  --primary: oklch(0.75 0.12 240); 
+  --primary-foreground: oklch(0.98 0 0);
+
+  /* Secondary = subtle mint, solid (no gradients) */
+  --secondary: oklch(0.92 0.05 160);
+  --secondary-foreground: oklch(0.20 0 0);
+
+  /* Muted surfaces */
+  --muted: oklch(0.92 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+
+  /* Accents (Sui blue tint) */
+  --accent: oklch(0.88 0.05 240);
+  --accent-foreground: oklch(0.20 0 0);
+
+  /* Success */
+  --success: oklch(0.75 0.14 150);
+  --success-dark: oklch(0.60 0.16 150);
+
+  /* Destructive */
+  --destructive: oklch(0.65 0.20 25);
+
+  /* Borders / Inputs */
+  --border: oklch(0.85 0 0);
+  --input: oklch(0.90 0 0);
+
+  /* Ring / Focus outlines */
+  --ring: oklch(0.75 0.12 240);
+
+  /* Charts (soft but bold) */
+  --chart-1: oklch(0.70 0.15 240);
+  --chart-2: oklch(0.75 0.12 150);
+  --chart-3: oklch(0.78 0.10 210);
+  --chart-4: oklch(0.82 0.08 180);
+  --chart-5: oklch(0.80 0.10 80);
+
+  /* Sidebar */
+  --sidebar: oklch(0.97 0 0);
+  --sidebar-foreground: oklch(0.20 0 0);
+  --sidebar-primary: oklch(0.75 0.12 240);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.92 0.05 160);
+  --sidebar-accent-foreground: oklch(0.20 0 0);
+  --sidebar-border: oklch(0.85 0 0);
+  --sidebar-ring: oklch(0.75 0.12 240);
+
+  /* Radii */
   --radius: 0.625rem;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #00b0ff;
-  --primary-foreground: #ffffff;
-  --secondary: #dcfce7; /* light mint/green tint */
-  --secondary-foreground: #064e3b;
-  --muted-foreground: #475569;
-  --accent-foreground: #0f172a;
-  --destructive: #ef4444;
-  --input: #e2e8f0;
-  --ring: #00b0ff;
-  --chart-1: #00b0ff;
-  --chart-2: #4ade80;
-  --chart-3: #38bdf8;
-  --chart-4: #a7f3d0;
-  --chart-5: #86efac;
-  --sidebar: #f0f9ff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #00b0ff;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #dcfce7;
-  --sidebar-accent-foreground: #064e3b;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #00b0ff;
 }
+
 
 [data-theme="dark"] {
   /* 🌙 Dark Theme (Sui night) */

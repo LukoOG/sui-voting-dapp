@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import type { Metadata } from 'next';
+import { ThemeProvider } from "@/layout/theme-provider";
 
 import "./globals.css";
 import '@mysten/dapp-kit/dist/index.css';
@@ -33,10 +34,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <SuiLayoutProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
 			<section className="">
-				  <header className="border-b sticky top-0 z-50">
-					<Navbar />
-				  </header>
+				<Navbar />
 				
 				<main className="">{ children }</main>
 				
@@ -50,6 +55,7 @@ export default function RootLayout({
 				
 			</section>
 			<Toaster/>
+			</ThemeProvider>
           </SuiLayoutProvider>
       </body>
     </html>

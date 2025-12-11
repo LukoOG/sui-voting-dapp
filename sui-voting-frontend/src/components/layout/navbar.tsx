@@ -1,83 +1,65 @@
 'use client';
 
 import { useState } from 'react';
-import { Waves } from 'lucide-react';
+import { Waves, Sun, Moon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useDisconnectWallet, ConnectModal, useCurrentAccount } from "@mysten/dapp-kit"
+import Link from "next/link";
+import { useTheme } from "next-themes"
 
-export default function Navbar() {
+interface HeaderProps {
+  currentTheme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+
+const Navbar = () => {
   const account  = useCurrentAccount();
   const { mutate: disconnect } = useDisconnectWallet();
   const [open, setOpen] = useState(false);
     const shortAddress = (address: string) =>
     `${address.slice(0, 6)}...${address.slice(-4)}`;
+	const { theme, setTheme } = useTheme()
+	console.log(theme)
 	
   return (
-    <nav className="border-b border-border bg-card/50 backdrop-blur-md sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md transition-colors duration-300">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Left: Logo */}
-          <div className="flex items-center gap-3 cursor-pointer select-none">
-            <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center shadow-md hover:shadow-lg transition-all">
-              <Waves className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight text-foreground">
-                SuiVS
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Vote for your favorites on Sui
-              </p>
-            </div>
+          <div className="flex items-center space-x-8">
+            <Link href="/" >
+              <span className="text-2xl font-bold text-primary">SuiVS</span>
+            </Link>
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link 
+                href="/explore" 
+
+              >
+                Explore
+              </Link>
+              <Link 
+                href="/create"
+                
+                onClick={(e) => e.preventDefault()} // Placeholder
+              >
+                Create Poll
+              </Link>
+            </nav>
           </div>
-
-          {/* Right: Navigation */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <a
-              href="/explore"
-              className="hidden sm:inline text-muted-foreground hover:text-accent transition-colors font-medium"
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={()=>setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-full text-muted-foreground hover:bg-border transition-colors"
+              aria-label="Toggle theme"
             >
-              Explore
-            </a>
-
-            {/* Create Poll (visible only for connected users) */}
-            {account && (
-            <a
-              href="/create"
-              className="hidden sm:inline text-muted-foreground hover:text-accent transition-colors font-medium"
-            >
-              Create Poll
-            </a>
-            )}
-
-            {/* Wallet Section */}
-			{!account ? (
-			  <ConnectModal
-				trigger={
-				  <Button variant="default">
-					Connect Wallet
-				  </Button>
-				}
-				open={open}
-				onOpenChange={setOpen}
-			  />
-			) : (
-			  <div className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-card text-sm text-foreground hover:bg-accent/10 transition">
-				<span className="font-mono text-[var(--accent)]">
-				  {shortAddress(account.address)}
-				</span>
-				<div className="w-2 h-2 rounded-full bg-[var(--success)]"></div>
-
-					<Button onClick={()=>disconnect()} variant="ghost" size="sm" className="cursor-pointer hover:text-muted">
-					  Disconnect
-					</Button>
-				  
-			  </div>
-			)}
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
+            <Button variant="primary">Connect Wallet</Button>
           </div>
         </div>
       </div>
-    </nav>
+    </header>
 
   );
 }
+
+export default Navbar
