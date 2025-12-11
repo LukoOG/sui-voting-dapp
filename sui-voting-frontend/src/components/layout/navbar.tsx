@@ -19,7 +19,7 @@ const Navbar = () => {
     const shortAddress = (address: string) =>
     `${address.slice(0, 6)}...${address.slice(-4)}`;
 	const { theme, setTheme } = useTheme()
-	console.log(theme)
+	//console.log(theme)
 	
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md transition-colors duration-300">
@@ -53,7 +53,7 @@ const Navbar = () => {
             >
               {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>
-            <Button variant="primary">Connect Wallet</Button>
+            <Button variant="link">Connect Wallet</Button>
           </div>
         </div>
       </div>

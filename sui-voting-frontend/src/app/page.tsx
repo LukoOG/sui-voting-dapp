@@ -10,31 +10,36 @@ export default function Hero() {
 		id: 1, 
 		title: "Best DeFi Protocol on Sui?", 
 		totalVotes: 12847,
-		image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	  { 
 		id: 2, 
 		title: "Favorite NFT Collection", 
 		totalVotes: 9521,
-		image: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	  { 
 		id: 3, 
 		title: "Most Anticipated Sui Launch", 
 		totalVotes: 8394,
-		image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	  { 
 		id: 4, 
 		title: "Top Gaming dApp", 
 		totalVotes: 7203,
-		image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	  { 
 		id: 5, 
 		title: "Community Choice Awards", 
 		totalVotes: 6815,
-		image: "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	  { 
 		id: 6, 
@@ -46,19 +51,22 @@ export default function Hero() {
 		id: 7, 
 		title: "Hottest Meme Coin", 
 		totalVotes: 4928,
-		image: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	  { 
 		id: 8, 
 		title: "Best Developer Tool", 
 		totalVotes: 3847,
-		image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	  { 
 		id: 9, 
 		title: "Most Innovative Project", 
 		totalVotes: 3291,
-		image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop"
+		image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop",
+		category: "DeFi"
 	  },
 	];
 
