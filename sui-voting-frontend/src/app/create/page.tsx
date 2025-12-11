@@ -20,7 +20,7 @@ import { uploadToCloudinary } from "@/lib/utils/uploadToCloudinary";
 import { useCurrentAccount } from "@mysten/dapp-kit";
 
 import { usePollActions } from "@/hooks/handlePollActions";
-//import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 
 //const getDuration = ():number | null => null 
 
@@ -29,7 +29,7 @@ type PollForm = z.infer<typeof pollSchema>;
 const DEFAULT_IMAGE = "https://res.cloudinary.com/dfxieiol1/image/upload/v1763136116/sui_banner2_baub9o.webp";
 
 const CreatePoll = () => {
-  const navigate = () => ("navigetd") //useNavigate();
+  const router = useRouter()
   const account = useCurrentAccount();
   const { createPoll } = usePollActions();
   
@@ -86,6 +86,8 @@ const CreatePoll = () => {
 			thumbnailUrl = await uploadToCloudinary(thumbnailFile);
 		  };
 		  
+		  console.log(data)
+		  
 		  const resolvedOptions = await Promise.all(
 			data.options.map( async(opt)=>{
 				let imageUrl = opt.image ?? "";
@@ -101,6 +103,7 @@ const CreatePoll = () => {
 				}
 			} )
 		  )
+		  //onClick={handleSubmit(handleCreatePoll)}
 		console.log(resolvedOptions);
 		  
 		  await createPoll.mutateAsync({
@@ -125,41 +128,41 @@ const CreatePoll = () => {
 
 
   return (
-	<div className="min-h-screen bg-background">
-	  {/* Header */}
-	  <nav className="border-b border-border bg-surface/80 backdrop-blur-sm sticky top-0 z-50">
-		<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-		  <div className="flex items-center gap-4">
-			<Button
-			  variant="ghost"
-			  size="icon"
-			  onClick={() => navigate()}
-			  className="text-muted-foreground hover:text-accent"
+	<div className="max-w-7xl mx-auto animate-in fade-in duration-500">
+		{/* ⭐ Enhanced Header */}
+		<section className="mb-8 md:mb-16 flex flex-col items-center text-center md:text-left md:flex-row md:items-center md:justify-between gap-6 max-w-6xl mx-auto">
+
+		  {/* Left — Title + Subtitle + Back Button */}
+		  <div className="space-y-3">
+			<button 
+			  onClick={() => router.back()}
+			  className="hover:cursor-hover flex items-center text-sm text-muted-foreground hover:text-primary transition-colors group mx-auto md:mx-0"
 			>
-			  <ArrowLeft className="w-5 h-5" />
-			</Button>
-			<div className="flex items-center gap-3">
-			  <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center shadow-md">
-				<Waves className="w-5 h-5 text-white" />
-			  </div>
-			  <div>
-				<h1 className="text-lg font-semibold tracking-tight text-foreground">Create Poll</h1>
-				<p className="text-xs text-muted-foreground">Set up your versus battle</p>
-			  </div>
+			  <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+			  Back
+			</button>
+
+			<h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70 drop-shadow-sm">
+			  Create a Poll
+			</h1>
+
+			<p className="text-lg text-muted-foreground max-w-xl mx-auto md:mx-0">
+			  Design your battle. Set the rules. Launch to the ecosystem.
+			</p>
+		  </div>
+
+		  {/* Right — decorative icon */}
+		  <div className="hidden md:block">
+			<div className="p-4 bg-primary/10 rounded-3xl shadow-sm">
+				{/* <Waves className="w-10 h-10 text-primary" /> */}
 			</div>
 		  </div>
 
-		  <Button
-			onClick={handleSubmit(handleCreatePoll)}
-			className="bg-accent hover:bg-accent-hover text-white"
-		  >
-			Publish Poll
-		  </Button>
-		</div>
-	  </nav>
+		</section>
+
 
 	  {/* Main Content */}
-	  <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+	  <div className="max-w-6xl mx-auto py-8">
 		<div className="grid gap-8 lg:grid-cols-3">
 		  {/* Left Column - Main Form */}
 		  <div className="lg:col-span-2 space-y-6">
@@ -272,7 +275,8 @@ const CreatePoll = () => {
 				  <CardTitle>Poll Options</CardTitle>
 				  <CardDescription>Add choices for people to vote on (minimum 2)</CardDescription>
 				</CardHeader>
-				<CardContent className="space-y-4">
+				<CardContent>
+				<div className="grid sm:grid-cols-2 gap-6">
 				  {fields.map((field, index) => {
 					    const optionImageFile = watch(`options.${index}.imageFile`);
 						const optionImageUrl = watch(`options.${index}.image`);
@@ -284,7 +288,7 @@ const CreatePoll = () => {
 					  initial={{ opacity: 0, x: -20 }}
 					  animate={{ opacity: 1, x: 0 }}
 					  transition={{ duration: 0.3, delay: index * 0.05 }}
-					  className="p-4 border border-border rounded-lg bg-surface space-y-3"
+					  className="p-4 border border-border rounded-lg bg-surface space-y-4 flex flex-col"
 					>
 					  <div className="flex items-center justify-between">
 						<Label className="text-sm font-medium text-muted-foreground">
@@ -350,7 +354,7 @@ const CreatePoll = () => {
 
 					  {/* Preview */}
 					  {imageSrc && (
-						<div className="mt-2 relative h-60 mx-auto w-fit rounded-md overflow-hidden border border-border">
+						<div className="mt-2 aspect-square relative w-full rounded-md overflow-hidden border border-border">
 						  <img
 						  alt={"image option on Sui VS"}
 							src={imageSrc}
@@ -362,15 +366,14 @@ const CreatePoll = () => {
 					</motion.div>
 					)
 				  })}
-
-				  <Button
+				</div>
+				<Button
 					variant="outline"
 					onClick={() =>
 					  append({
 						name: "",
 						caption: "",
-						image:
-						  "https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
+						image:"",//"https://res.cloudinary.com/dfxieiol1/image/upload/v1749093935/product_images/rvqzp5ezu8mhh9go1zkj.jpg",
 						imageFile: undefined,
 					  })
 					}
@@ -385,7 +388,7 @@ const CreatePoll = () => {
 		  </div>
 
 		  {/* Right Column - Settings */}
-		  <div className="space-y-6">
+		  <div className="space-y-6 w-full">
 			<motion.div
 			  initial={{ opacity: 0, y: 20 }}
 			  animate={{ opacity: 1, y: 0 }}
@@ -527,6 +530,12 @@ const CreatePoll = () => {
 				</CardContent>
 			  </Card>
 			</motion.div>
+			<Button 
+				onClick={handleSubmit(handleCreatePoll)}
+				className="w-full py-4 text-lg font-bold shadow-lg  hover:shadow-primary/40 transform hover:-translate-y-1"
+            >
+                    🚀 Publish Poll
+            </Button>
 		  </div>
 		</div>
 	  </div>

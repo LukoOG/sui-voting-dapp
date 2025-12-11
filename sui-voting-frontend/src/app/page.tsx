@@ -125,8 +125,8 @@ export default function Hero() {
       >
         <div className="flex items-center justify-between mb-10 px-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-500">
-                <Flame className="w-6 h-6" />
+            <div className="p-2 rounded-lg text-foreground">
+                <Flame strokeWidth={5} className="w-6 h-6" />
             </div>
             <h3 className="text-3xl font-bold text-foreground">
               Trending Now
