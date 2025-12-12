@@ -86,7 +86,6 @@ const CreatePoll = () => {
 			thumbnailUrl = await uploadToCloudinary(thumbnailFile);
 		  };
 		  
-		  console.log(data)
 		  
 		  const resolvedOptions = await Promise.all(
 			data.options.map( async(opt)=>{
@@ -103,8 +102,6 @@ const CreatePoll = () => {
 				}
 			} )
 		  )
-		  //onClick={handleSubmit(handleCreatePoll)}
-		console.log(resolvedOptions);
 		  
 		  await createPoll.mutateAsync({
 			address: account?.address as string,
