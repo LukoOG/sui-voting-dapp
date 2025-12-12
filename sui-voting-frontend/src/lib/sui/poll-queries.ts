@@ -28,7 +28,7 @@ export function usePaginatedPolls(page: number, pageSize: number) {
     objects(
       first: $first,
       after: $after,
-      filter: { type: "0xc80cb054484389b580722c348ddb27e7c5ff994f1f3efe23dc37751f661cd316::poll::Poll" }
+      filter: { type: "0xea9988be2c016f4c10a1b18e578a6e8129e6dba49b035aa92f22459e21c9d9ee::poll::Poll" }
     ) {
       nodes {
 		  address
