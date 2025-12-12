@@ -3,12 +3,37 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Poll } from '../types';
 import { Button } from '@/components/ui/button';
 import { Vote, Check, Clock, Share, ArrowLeft } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
-const PollDetailView: React.FC = ({ params }) => {
+interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+  image?: string;
+}
+
+interface PollConfig {
+  allowAnonymous: boolean;
+  allowMultiple: boolean;
+  weightedVotes: boolean;
+}
+
+interface Poll {
+  id: number;
+  title: string;
+  image: string;
+  totalVotes: number;
+  creator: string;
+  category?: string;
+  description?: string;
+  options?: PollOption[];
+  config?: PollConfig;
+  endsAt?: string; // ISO Date string
+}
+
+const PollDetailView: React.FC = () => {
   const { id } = useParams();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
