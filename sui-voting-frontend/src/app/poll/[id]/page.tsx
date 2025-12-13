@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Vote, Check, Clock, Share, ArrowLeft } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useSuiClientQuery } from "@mysten/dapp-kit";
+import { SuiParsedData } from "@mysten/sui/client";
 
 interface PollOption {
   id: string;
@@ -42,83 +44,44 @@ const PollDetailView: React.FC = () => {
   const [isVoting, setIsVoting] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
   
-  const MOCK_POLLS = [
-	  { 
-		id: 1, 
-		title: "Best DeFi Protocol on Sui?", 
-		totalVotes: 12847,
-		image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 2, 
-		title: "Favorite NFT Collection", 
-		totalVotes: 9521,
-		image: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 3, 
-		title: "Most Anticipated Sui Launch", 
-		totalVotes: 8394,
-		image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 4, 
-		title: "Top Gaming dApp", 
-		totalVotes: 7203,
-		image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 5, 
-		title: "Community Choice Awards", 
-		totalVotes: 6815,
-		image: "https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 6, 
-		title: "Best Sui Wallet", 
-		totalVotes: 5492,
-		image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=400&h=300&fit=crop",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 7, 
-		title: "Hottest Meme Coin", 
-		totalVotes: 4928,
-		image: "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 8, 
-		title: "Best Developer Tool", 
-		totalVotes: 3847,
-		image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	  { 
-		id: 9, 
-		title: "Most Innovative Project", 
-		totalVotes: 3291,
-		image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=300&fit=crop",
-		category: "DeFi",
-		creator: "Sipe"
-	  },
-	];
-	
-	
+  function parsePollFromSui(fields: any): Poll {
+	  return {
+		id: Number(fields.id.id ?? 0),
+		title: fields.title,
+		description: fields.description,
+		image: fields.thumbnail_url,
+		creator: fields.creator,
+		category: fields.category,
+		totalVotes: Number((fields.voters.size + fields.anon_voters.size) ?? 0),
+		close: fields.close_time,
+		config: {
+		  allowAnonymous: fields.poll_config.fields.allow_anonymous,
+		  allowMultiple: fields.poll_config.fields.allow_multiple,
+		  weightedVotes: fields.poll_config.fields.weighted_votes,
+		},
+		options: fields.options?.map((opt: any) => ({
+		  id: opt.id,
+		  text: opt.text,
+		  votes: Number(opt.votes),
+		  image: opt.image_url,
+		})),
+	  };
+	}
 
-  const totalVotes = useMemo(() => {
+  
+  const { data, isPending, isError, error, refetch } = useSuiClientQuery(
+	  "getObject",
+	  {
+		id: id,
+		options: {
+		  showType: true,
+		  showOwner: true,
+		  showContent: true,
+		},
+	  }
+	);
+	
+	const totalVotes = useMemo(() => {
     if (!poll?.options) return 0;
     return poll.options.reduce((sum, option) => sum + option.votes, 0);
   }, [poll]);
@@ -177,14 +140,26 @@ const PollDetailView: React.FC = () => {
     setShowCopied(true);
     setTimeout(() => setShowCopied(false), 2000);
   }
+  
+  
+  useEffect(() => {
+	  if (!data?.data?.content) return;
+	  
+	  const content = data.data.content;
 
-  if (!poll) {
+	  const fields = content.fields;
+	  
+	  console.log(fields)
+	  const parsedPoll = parsePollFromSui(fields);
+
+	  setPoll(parsedPoll);
+	}, [data]);
+
+  
+  if (isPending || !poll) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-4 text-center">
-        <h2 className="text-3xl font-extrabold text-foreground mb-4">Poll not found</h2>
-        <Link href="/explore">
-          <Button variant="secondary">Back to Explore</Button>
-        </Link>
+        <h2 className="text-3xl font-extrabold text-foreground mb-4">Loading</h2>
       </div>
     );
   }
