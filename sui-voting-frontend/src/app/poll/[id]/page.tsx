@@ -35,6 +35,7 @@ interface Poll {
 
 const PollDetailView: React.FC = () => {
   const { id } = useParams();
+  console.log(id);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -114,13 +115,8 @@ const PollDetailView: React.FC = () => {
 		creator: "Sipe"
 	  },
 	];
-
-  useEffect(() => {
-    const foundPoll = MOCK_POLLS.find(p => p.id === Number(id)) || null;
-    setPoll(foundPoll);
-    setHasVoted(false);
-    setSelectedOptions([]);
-  }, [id]);
+	
+	
 
   const totalVotes = useMemo(() => {
     if (!poll?.options) return 0;

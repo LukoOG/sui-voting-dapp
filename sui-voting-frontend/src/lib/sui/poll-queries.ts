@@ -3,7 +3,7 @@ import suiEnv from "@/lib/sui/suiEnv";
 
 import { useEffect, useState } from "react";
 
-const SUI_GRAPHQL_ENDPOINT = "https://graphql.devnet.sui.io/graphql"; 
+const SUI_GRAPHQL_ENDPOINT = "https://graphql.testnet.sui.io/graphql"; 
 
 export function usePaginatedPolls(page: number, pageSize: number) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,7 +21,6 @@ export function usePaginatedPolls(page: number, pageSize: number) {
     if (page > 1 && endCursor) {
       afterCursor = endCursor;
     }
-	console.log(suiEnv.pollType)
 
 	const query = `
   query GetPolls($first: Int, $after: String) {
@@ -61,8 +60,9 @@ export function usePaginatedPolls(page: number, pageSize: number) {
     })
       .then((res) => res.json())
       .then((data) => {
-		  console.log(data);
-        setPolls(data.data.objects.nodes);
+		  //console.log(data);
+		  const filteredPolls = data.data.objects.nodes.map(node => node.asMoveObject.contents.json)
+        setPolls(filteredPolls);
         setHasNextPage(data.data.objects.pageInfo.hasNextPage);
         setEndCursor(data.data.objects.pageInfo.endCursor);
       })

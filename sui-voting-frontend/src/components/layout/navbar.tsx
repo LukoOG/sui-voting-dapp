@@ -21,7 +21,6 @@ const Navbar = () => {
     const shortAddress = (address: string) =>
     `${address.slice(0, 6)}...${address.slice(-4)}`;
 	const { theme, setTheme } = useTheme()
-	console.log(account?.address)
 	
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md transition-colors duration-300">
