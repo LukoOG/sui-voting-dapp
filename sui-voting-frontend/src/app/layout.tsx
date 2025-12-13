@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+	<html>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <SuiLayoutProvider>
           <ThemeProvider
@@ -60,6 +60,6 @@ export default function RootLayout({
 			</ThemeProvider>
           </SuiLayoutProvider>
       </body>
-    </html>
+	</html>
   );
 }
