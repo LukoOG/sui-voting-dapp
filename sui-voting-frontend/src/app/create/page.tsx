@@ -7,7 +7,7 @@ import { z } from "zod";
 import { pollSchema } from "@/lib/schemas/poll.schema";
 import { motion } from "framer-motion";
 
-import { Plus, X, Image as ImageIcon, Settings, Waves, ArrowLeft } from "lucide-react";
+import { Plus, X, Image as ImageIcon, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

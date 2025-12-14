@@ -1,5 +1,5 @@
 export function getPreviewImages(
-  options: any[],
+  options: Array<Record<string, unknown>>,
   fallback: string
 ): { image: string; text: string }[] {
   const withImages = options.filter(opt => opt.image_url);

@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Vote, Check, Clock, Share, ArrowLeft } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useSuiClientQuery } from "@mysten/dapp-kit";
-import { SuiParsedData } from "@mysten/sui/client";
 
 interface PollOption {
   id: string;
@@ -43,36 +42,36 @@ const PollDetailView: React.FC = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
-  
-  function parsePollFromSui(fields: any): Poll {
+	  function parsePollFromSui(fields: Record<string, unknown>): Poll {
+	  const f = fields as Record<string, unknown>;
 	  return {
-		id: Number(fields.id.id ?? 0),
-		title: fields.title,
-		description: fields.description,
-		image: fields.thumbnail_url,
-		creator: fields.creator,
-		category: fields.category,
-		totalVotes: Number((fields.voters.size + fields.anon_voters.size) ?? 0),
-		close: fields.close_time,
+		id: Number((f.id as Record<string, unknown>).id ?? 0),
+		title: f.title as string,
+		description: f.description as string,
+		image: f.thumbnail_url as string,
+		creator: f.creator as string,
+		category: f.category as string,
+		totalVotes: Number(((f.voters as Record<string, unknown>).size as number) + ((f.anon_voters as Record<string, unknown>).size as number)),
+		endsAt: f.close_time as string,
 		config: {
-		  allowAnonymous: fields.poll_config.fields.allow_anonymous,
-		  allowMultiple: fields.poll_config.fields.allow_multiple,
-		  weightedVotes: fields.poll_config.fields.weighted_votes,
+		  allowAnonymous: ((f.poll_config as Record<string, unknown>).fields as Record<string, unknown>).allow_anonymous as boolean,
+		  allowMultiple: ((f.poll_config as Record<string, unknown>).fields as Record<string, unknown>).allow_multiple as boolean,
+		  weightedVotes: ((f.poll_config as Record<string, unknown>).fields as Record<string, unknown>).weighted_votes as boolean,
 		},
-		options: fields.options?.map((opt: any) => ({
-		  id: opt.id,
-		  text: opt.text,
-		  votes: Number(opt.votes),
-		  image: opt.image_url,
+		options: (f.options as Array<Record<string, unknown>>)?.map((opt: Record<string, unknown>) => ({
+		  id: opt.id as string,
+		  text: opt.text as string,
+		  votes: Number(opt.votes as number),
+		  image: opt.image_url as string,
 		})),
 	  };
 	}
 
   
-  const { data, isPending, isError, error, refetch } = useSuiClientQuery(
+  const { data, isPending } = useSuiClientQuery(
 	  "getObject",
 	  {
-		id: id,
+		id: Array.isArray(id) ? id[0] : id || "",
 		options: {
 		  showType: true,
 		  showOwner: true,
@@ -145,9 +144,9 @@ const PollDetailView: React.FC = () => {
   useEffect(() => {
 	  if (!data?.data?.content) return;
 	  
-	  const content = data.data.content;
+	  const content = data.data.content as Record<string, unknown>;
 
-	  const fields = content.fields;
+	  const fields = (content.fields as Record<string, unknown>) || content;
 	  
 	  console.log(fields)
 	  const parsedPoll = parsePollFromSui(fields);

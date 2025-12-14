@@ -6,9 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Vote, Check, Clock, Share, ArrowLeft, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useSuiClientQuery, useResolveSuiNSName, useSignAndExecuteTransaction, useCurrentAccount } from "@mysten/dapp-kit";
-import { SuiParsedData } from "@mysten/sui/client";
-import { votePollTx } from "@/lib/sui/suiTx";
+import { useSuiClientQuery, useResolveSuiNSName, useCurrentAccount } from "@mysten/dapp-kit";
+import { usePollActions } from "@/hooks/handlePollActions";
 import { toast } from 'sonner';
 
 interface PollOption {
@@ -44,7 +43,7 @@ interface Poll {
 const PollDetailView: React.FC = () => {
   const { id } = useParams();
   const account = useCurrentAccount();
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const { walletVote } = usePollActions();
   //console.log(id);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -55,7 +54,7 @@ const PollDetailView: React.FC = () => {
   const shortAddress = (address: string) => { return `${address.slice(0, 6)}...${address.slice(-4)}`; }
  
   
-	  function parsePollFromSui(fields: any): Poll {
+	  function parsePollFromSui(fields: Record<string, unknown>): Poll {
 		  return {
 			id: Number(fields.id.id ?? 0),
 			title: fields.title,
@@ -70,7 +69,7 @@ const PollDetailView: React.FC = () => {
 			  allowMultiple: fields.poll_config.fields.allow_multiple_choice,
 			  weightedVotes: fields.poll_config.fields.allow_weighted,
 			},
-			options: fields.options?.map(({ fields }: any) => ({
+			options: fields.options?.map(({ fields }: { fields: Record<string, unknown> }) => ({
 			  id: fields.id ?? "0",
 			  text: fields.name || "",
 			  title: fields.name || "",
@@ -80,8 +79,8 @@ const PollDetailView: React.FC = () => {
 			  votes: 0,
 			})) || [],
 		  };
-		}  const { data: Ns, isPending: NsPending } = useResolveSuiNSName(poll?.creator)
-  const { data, isPending, isError, error, refetch } = useSuiClientQuery(
+		}  const { data: Ns } = useResolveSuiNSName(poll?.creator)
+  const { data, isPending } = useSuiClientQuery(
 	  "getObject",
 	  {
 		id: id,
@@ -147,36 +146,17 @@ const PollDetailView: React.FC = () => {
       for (const optionId of selectedOptions) {
         const optionIndex = poll.options?.findIndex(o => o.id === optionId) ?? 0;
         
-        const tx = votePollTx(
-          {
-            poll_id: id as string,
-            option_index: optionIndex,
-            owner: account.address,
-            is_anonymous: poll.config?.allowAnonymous ?? false,
-            weight: 1,
-          },
-          account.address
-        );
-
-        await new Promise((resolve, reject) => {
-          signAndExecuteTransaction(
-            { transaction: tx },
-            {
-              onSuccess: (result) => {
-                toast.success("Vote submitted successfully!");
-                console.log("Transaction result:", result);
-                resolve(result);
-              },
-              onError: (error) => {
-                toast.error("Failed to submit vote");
-                console.error("Transaction error:", error);
-                reject(error);
-              },
-            }
-          );
+        await walletVote.mutateAsync({
+          poll_id: id as string,
+          option_index: optionIndex,
+          owner: account.address,
+          is_anonymous: poll.config?.allowAnonymous ?? false,
+          weight: 1,
+          address: account.address,
         });
       }
 
+      toast.success("Vote submitted successfully!");
       setHasVoted(true);
       setSelectedOptions([]);
     } catch (error) {

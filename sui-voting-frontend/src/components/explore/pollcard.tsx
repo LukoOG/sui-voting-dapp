@@ -1,15 +1,44 @@
 import { formatTimeRemaining, getPreviewImages } from "@/lib/utils/parsepolls";
 import { motion } from "framer-motion";
-import { Search, Filter, TrendingUp, Clock, Vote, Wallet } from "lucide-react";
+import { Clock, Vote, Wallet } from "lucide-react";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 
-function PollCard({ poll, index }){
-	const previewOptions = getPreviewImages(
-			poll.options,
-			poll.thumbnail_url
-		  );
-		  
-	const noOfVotes = () => Number(poll.voters.size) + Number(poll.anon_voters.size)
+interface PollOption {
+  id: string;
+  name: string;
+  text?: string;
+  caption?: string;
+  image_url?: string;
+}
+
+interface PollConfig {
+  allow_anon_vote: boolean;
+  allow_multiple_choice: boolean;
+  allow_weighted: boolean;
+}
+
+interface PollCardProps {
+  poll: {
+    id: string;
+    title: string;
+    description: string;
+    thumbnail_url: string;
+    creator: string;
+    close_time: number;
+    options: PollOption[];
+    voters: { size: number };
+    anon_voters: { size: number };
+    poll_config: PollConfig;
+  };
+  index: number;
+}
+
+function PollCard({ poll, index }: PollCardProps) {
+	getPreviewImages(
+		poll.options,
+		poll.thumbnail_url
+	);	const noOfVotes = () => Number(poll.voters.size) + Number(poll.anon_voters.size)
 		  
 	const optionImages = poll.options.filter(
 		  (opt) => opt.image_url && opt.image_url.length > 0
