@@ -237,7 +237,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	poll
 }
 
-public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx: &mut TxContext): VoteReceipt{
+public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx: &mut TxContext){
 	let VoteTicket { option_index, owner, is_anon, mut anon, weight } = ticket;
 	
 	assert!(poll.is_active, EPollNotActive);
@@ -261,7 +261,8 @@ public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx:
 	let count = table::borrow_mut<u64, u64>(&mut poll.votes, option_index);
     *count = *count + (1 * weight as u64);
 
-	VoteReceipt { id: object::new(ctx), poll_id: object::uid_to_inner(&poll.id), voter: owner, option_index, weight }
+	let receipt = VoteReceipt { id: object::new(ctx), poll_id: object::uid_to_inner(&poll.id), voter: owner, option_index, weight };
+	transfer::transfer(receipt, owner);
 }
 
 entry fun close_poll(_ctx: &mut TxContext){

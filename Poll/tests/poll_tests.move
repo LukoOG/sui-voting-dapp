@@ -187,7 +187,10 @@ fun test_wallet_poll_vote(){
 	let key = option::none();
 	let ticket = poll::createVoteTicket(&version, &mut poll, 1, scenario.ctx().sender(), false, key, 1);
 	
-	let receipt = poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
+	poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
+
+	scenario.next_tx(User1);
+	let receipt = scenario.take_from_sender<poll::VoteReceipt>();
 	
 	let (_id, voter, index, weight) = poll::receipt_fields(&receipt);
 	
@@ -260,8 +263,9 @@ fun test_double_wallet_poll_vote(){
 	let ticket = poll::createVoteTicket(&version, &mut poll, 1, scenario.ctx().sender(), false, key, 1);
 	let ticket_2 = poll::createVoteTicket(&version, &mut poll, 0, scenario.ctx().sender(), false, key, 1);
 	
-	let receipt = poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
-	let invalid_receipt = poll::vote_on_poll(&mut poll, ticket_2, &clock, scenario.ctx()); //expected to fail
+	poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
+	poll::vote_on_poll(&mut poll, ticket_2, &clock, scenario.ctx()); //expected to fail
+	
 	
 	//print(voter);
 	//print(weight);
@@ -272,8 +276,8 @@ fun test_double_wallet_poll_vote(){
 	ts::return_shared(version);
 	clock.destroy_for_testing();
 	poll::destroy_poll(poll);
-	poll::destroy_receipt(receipt);
-	poll::destroy_receipt(invalid_receipt);
+	//poll::destroy_receipt(receipt);
+	//poll::destroy_receipt(invalid_receipt);
 	scenario.end();	
 }
 
@@ -321,8 +325,11 @@ fun test_anonymous_poll_vote(){
 	let key = option::some(b"key for anon");
 	let ticket = poll::createVoteTicket(&version, &mut poll, 1, scenario.ctx().sender(), true, key, 1);
 	
-	let receipt = poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
-	
+	{
+		poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
+	};
+	scenario.next_tx(User1);
+	let receipt = scenario.take_from_sender<poll::VoteReceipt>();
 	let (_id, voter, index, weight) = poll::receipt_fields(&receipt);
 	
 	assert!(voter == scenario.ctx().sender(), 1);
