@@ -44,9 +44,12 @@ export const votePollTx = ({ poll_id, option_index, owner, is_anonymous, weight 
 	const ticket = tx.moveCall({
 		target: `${suiEnv.packageId}::poll::createVoteTicket`,
 		arguments: [
+			tx.object(suiEnv.versionObject),
+			tx.object(poll_id),
 			tx.pure.u64(option_index),
 			tx.pure.address(owner),
 			tx.pure.bool(is_anonymous),
+			tx.pure('vector<u8>', [1, 54, 66]),
 			tx.pure.u8(weight),
 		],
 		typeArguments: [],

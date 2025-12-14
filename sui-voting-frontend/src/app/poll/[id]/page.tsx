@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 import { useSuiClientQuery, useResolveSuiNSName, useCurrentAccount } from "@mysten/dapp-kit";
 import { usePollActions } from "@/hooks/handlePollActions";
 import { toast } from 'sonner';
+import { PollFields } from '@/lib/types';
 
 interface PollOption {
   id: string;
@@ -41,10 +42,11 @@ interface Poll {
 }
 
 const PollDetailView: React.FC = () => {
-  const { id } = useParams();
+  const params = useParams();
+  const pollId = Array.isArray(params.id) ? params.id[0] : params.id;
   const account = useCurrentAccount();
   const { walletVote } = usePollActions();
-  //console.log(id);
+  //console.log(pollId);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -53,8 +55,8 @@ const PollDetailView: React.FC = () => {
   
   const shortAddress = (address: string) => { return `${address.slice(0, 6)}...${address.slice(-4)}`; }
  
-  
-	  function parsePollFromSui(fields: Record<string, unknown>): Poll {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	  function parsePollFromSui(fields: any): Poll {
 		  return {
 			id: Number(fields.id.id ?? 0),
 			title: fields.title,
@@ -79,17 +81,22 @@ const PollDetailView: React.FC = () => {
 			  votes: 0,
 			})) || [],
 		  };
-		}  const { data: Ns } = useResolveSuiNSName(poll?.creator)
-  const { data, isPending } = useSuiClientQuery(
-	  "getObject",
-	  {
-		id: id,
-		options: {
-		  showOwner: true,
-		  showContent: true,
-		},
-	  }
-	);
+		}  
+		
+	const { data: Ns } = useResolveSuiNSName(poll?.creator)
+
+const { data, isPending } = useSuiClientQuery(
+  "getObject",
+  pollId
+    ? {
+        id: pollId,
+        options: {
+          showContent: true,
+          showOwner: true,
+        },
+      }
+    : null
+);
 	
 	const totalVotes = useMemo(() => {
 		if(poll){
@@ -182,7 +189,7 @@ const PollDetailView: React.FC = () => {
 	}, [data]);
 
   
-  if (isPending || !poll) {
+  if (isPending || !poll || !id) {
     return (
       <div className="min-h-[50vh] flex flex-col items-center justify-center p-4 text-center">
         <h2 className="text-3xl font-extrabold text-foreground mb-4">Loading</h2>
