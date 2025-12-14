@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Vote, Check, Clock, Share, ArrowLeft } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useSuiClientQuery, useResolveSuiNSName } from "@mysten/dapp-kit";
+import { useSuiClientQuery } from "@mysten/dapp-kit";
 import { SuiParsedData } from "@mysten/sui/client";
 
 interface PollOption {
@@ -37,15 +37,12 @@ interface Poll {
 
 const PollDetailView: React.FC = () => {
   const { id } = useParams();
-  //console.log(id);
+  console.log(id);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
-  
-  const shortAddress = (address: string) => { return `${address.slice(0, 6)}...${address.slice(-4)}`; }
- 
   
   function parsePollFromSui(fields: any): Poll {
 	  return {
@@ -54,29 +51,30 @@ const PollDetailView: React.FC = () => {
 		description: fields.description,
 		image: fields.thumbnail_url,
 		creator: fields.creator,
-		category: fields.category ?? "DeFi",
-		totalVotes: Number(fields.voters.fields.size) + Number(fields.anon_voters.fields.size),
+		category: fields.category,
+		totalVotes: Number((fields.voters.size + fields.anon_voters.size) ?? 0),
 		close: fields.close_time,
 		config: {
-		  allowAnonymous: fields.poll_config.fields.allow_anon_vote,
-		  allowMultiple: fields.poll_config.fields.allow_multiple_choice,
-		  weightedVotes: fields.poll_config.fields.allow_weighted,
+		  allowAnonymous: fields.poll_config.fields.allow_anonymous,
+		  allowMultiple: fields.poll_config.fields.allow_multiple,
+		  weightedVotes: fields.poll_config.fields.weighted_votes,
 		},
-		options: fields.options?.map(({ fields }: { caption: string, id: number, image_url: string, name: string }) => ({
-		  id: fields.id,
-		  title: fields.name,
-		  caption: fields.caption,
-		  image: fields.image_url,
+		options: fields.options?.map((opt: any) => ({
+		  id: opt.id,
+		  text: opt.text,
+		  votes: Number(opt.votes),
+		  image: opt.image_url,
 		})),
 	  };
 	}
 
-  const { data: Ns, isPending: NsPending } = useResolveSuiNSName(poll?.creator)
+  
   const { data, isPending, isError, error, refetch } = useSuiClientQuery(
 	  "getObject",
 	  {
 		id: id,
 		options: {
+		  showType: true,
 		  showOwner: true,
 		  showContent: true,
 		},
@@ -84,26 +82,28 @@ const PollDetailView: React.FC = () => {
 	);
 	
 	const totalVotes = useMemo(() => {
-		if(poll){
-			return poll.totalVotes
-		}
-	  }, [poll]);	
-	 	 
-	const timeRemaining = useMemo(() => {
-		if (!poll?.close_time) return 'Timeless';
-		const diff = new Date(poll.close_time).getTime() - new Date().getTime();
-		if (diff < 0) return 'Poll ended';
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-		return `${days}d ${hours}h remaining`;
-	}, [poll]);
-	  
-	const creator =useMemo(() => {
-		if(poll?.creator){
-			return Ns ?? shortAddress(poll.creator)
-		}
-		return "loading..."
-	}, [poll, Ns])
+    if (!poll?.options) return 0;
+    return poll.options.reduce((sum, option) => sum + option.votes, 0);
+  }, [poll]);
+
+  // Logic to simulate updated percentages after user votes locally
+  const getDisplayVotes = (optionId: string, currentVotes: number) => {
+     if (hasVoted && selectedOptions.includes(optionId)) {
+         return currentVotes + 1;
+     }
+     return currentVotes;
+  }
+  
+  const displayTotalVotes = hasVoted ? totalVotes + selectedOptions.length : totalVotes;
+
+  const timeRemaining = useMemo(() => {
+    if (!poll?.endsAt) return 'Timeless';
+    const diff = new Date(poll.endsAt).getTime() - new Date().getTime();
+    if (diff < 0) return 'Poll ended';
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    return `${days}d ${hours}h remaining`;
+  }, [poll]);
 
   const handleOptionClick = (optionId: string) => {
     if (hasVoted || isVoting) return;
@@ -127,7 +127,20 @@ const PollDetailView: React.FC = () => {
   const handleVote = () => {
     if (selectedOptions.length === 0) return;
     setIsVoting(true);
+    
+    // Simulate network delay for effect
+    setTimeout(() => {
+        setIsVoting(false);
+        setHasVoted(true);
+    }, 800);
   };
+  
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setShowCopied(true);
+    setTimeout(() => setShowCopied(false), 2000);
+  }
+  
   
   useEffect(() => {
 	  if (!data?.data?.content) return;
@@ -140,7 +153,6 @@ const PollDetailView: React.FC = () => {
 	  const parsedPoll = parsePollFromSui(fields);
 
 	  setPoll(parsedPoll);
-	  console.log(parsedPoll)
 	}, [data]);
 
   
@@ -210,8 +222,8 @@ const PollDetailView: React.FC = () => {
                         const isSelected = selectedOptions.includes(option.id);
                         
                         // Calculate stats
-                        //const votes = getDisplayVotes(option.id, option.votes);
-                        //const percentage = displayTotalVotes > 0 ? (votes / displayTotalVotes) * 100 : 0;
+                        const votes = getDisplayVotes(option.id, option.votes);
+                        const percentage = displayTotalVotes > 0 ? (votes / displayTotalVotes) * 100 : 0;
                         
                         return (
                             <motion.button
@@ -345,7 +357,7 @@ const PollDetailView: React.FC = () => {
                             <Vote className="w-4 h-4" />
                             <span className="text-sm font-medium">Total Votes</span>
                         </div>
-                        <span className="font-bold text-foreground">{totalVotes}</span>
+                        <span className="font-bold text-foreground">{displayTotalVotes.toLocaleString()}</span>
                     </div>
                 </div>
             </div>
@@ -358,7 +370,7 @@ const PollDetailView: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-xs text-muted-foreground font-semibold uppercase">Created By</p>
-                        <p className="font-bold text-foreground">{creator}</p>
+                        <p className="font-bold text-foreground">{poll.creator}</p>
                     </div>
                  </div>
                  
@@ -375,7 +387,7 @@ const PollDetailView: React.FC = () => {
             </div>
 
             {/* Share Button */}
-            <Button variant="secondary" className="w-full flex items-center justify-center gap-2 py-3">
+            <Button variant="secondary" onClick={handleShare} className="w-full flex items-center justify-center gap-2 py-3">
                 <Share className="w-4 h-4" />
                 {showCopied ? 'Link Copied!' : 'Share Poll'}
             </Button>

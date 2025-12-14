@@ -182,8 +182,8 @@ const Explore = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 		{polls.map((poll, index) => {
 		  return (
-		  <Link href={`/poll/${poll.id}`} className='block'>
-			<PollCard key={index} poll={poll} index={index} />
+		  <Link key={index} href={`/poll/${poll.id}`} className='block'>
+			<PollCard poll={poll} index={index} />
 			</Link>
 		  );
 		})}
