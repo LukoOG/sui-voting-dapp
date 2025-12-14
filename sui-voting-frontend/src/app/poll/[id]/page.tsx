@@ -4,16 +4,21 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Vote, Check, Clock, Share, ArrowLeft } from 'lucide-react';
+import { Vote, Check, Clock, Share, ArrowLeft, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useSuiClientQuery, useResolveSuiNSName } from "@mysten/dapp-kit";
+import { useSuiClientQuery, useResolveSuiNSName, useSignAndExecuteTransaction, useCurrentAccount } from "@mysten/dapp-kit";
 import { SuiParsedData } from "@mysten/sui/client";
+import { votePollTx } from "@/lib/sui/suiTx";
+import { toast } from 'sonner';
 
 interface PollOption {
   id: string;
   text: string;
+  title?: string;
+  name?: string;
   votes: number;
   image?: string;
+  caption?: string;
 }
 
 interface PollConfig {
@@ -33,10 +38,13 @@ interface Poll {
   options?: PollOption[];
   config?: PollConfig;
   endsAt?: string; // ISO Date string
+  close_time?: string;
 }
 
 const PollDetailView: React.FC = () => {
   const { id } = useParams();
+  const account = useCurrentAccount();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   //console.log(id);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -47,31 +55,32 @@ const PollDetailView: React.FC = () => {
   const shortAddress = (address: string) => { return `${address.slice(0, 6)}...${address.slice(-4)}`; }
  
   
-  function parsePollFromSui(fields: any): Poll {
-	  return {
-		id: Number(fields.id.id ?? 0),
-		title: fields.title,
-		description: fields.description,
-		image: fields.thumbnail_url,
-		creator: fields.creator,
-		category: fields.category ?? "DeFi",
-		totalVotes: Number(fields.voters.fields.size) + Number(fields.anon_voters.fields.size),
-		close: fields.close_time,
-		config: {
-		  allowAnonymous: fields.poll_config.fields.allow_anon_vote,
-		  allowMultiple: fields.poll_config.fields.allow_multiple_choice,
-		  weightedVotes: fields.poll_config.fields.allow_weighted,
-		},
-		options: fields.options?.map(({ fields }: { caption: string, id: number, image_url: string, name: string }) => ({
-		  id: fields.id,
-		  title: fields.name,
-		  caption: fields.caption,
-		  image: fields.image_url,
-		})),
-	  };
-	}
-
-  const { data: Ns, isPending: NsPending } = useResolveSuiNSName(poll?.creator)
+	  function parsePollFromSui(fields: any): Poll {
+		  return {
+			id: Number(fields.id.id ?? 0),
+			title: fields.title,
+			description: fields.description,
+			image: fields.thumbnail_url,
+			creator: fields.creator,
+			category: fields.category ?? "DeFi",
+			totalVotes: Number(fields.voters.fields.size) + Number(fields.anon_voters.fields.size),
+			close_time: fields.close_time,
+			config: {
+			  allowAnonymous: fields.poll_config.fields.allow_anon_vote,
+			  allowMultiple: fields.poll_config.fields.allow_multiple_choice,
+			  weightedVotes: fields.poll_config.fields.allow_weighted,
+			},
+			options: fields.options?.map(({ fields }: any) => ({
+			  id: fields.id ?? "0",
+			  text: fields.name || "",
+			  title: fields.name || "",
+			  name: fields.name || "",
+			  caption: fields.caption || "",
+			  image: fields.image_url || "",
+			  votes: 0,
+			})) || [],
+		  };
+		}  const { data: Ns, isPending: NsPending } = useResolveSuiNSName(poll?.creator)
   const { data, isPending, isError, error, refetch } = useSuiClientQuery(
 	  "getObject",
 	  {
@@ -124,9 +133,58 @@ const PollDetailView: React.FC = () => {
     }
   };
 
-  const handleVote = () => {
-    if (selectedOptions.length === 0) return;
+  const handleVote = async () => {
+    if (selectedOptions.length === 0 || !account) return;
+    
     setIsVoting(true);
+    try {
+      if (!id || !poll) {
+        toast.error("Poll data not found");
+        return;
+      }
+
+      // Execute vote for each selected option
+      for (const optionId of selectedOptions) {
+        const optionIndex = poll.options?.findIndex(o => o.id === optionId) ?? 0;
+        
+        const tx = votePollTx(
+          {
+            poll_id: id as string,
+            option_index: optionIndex,
+            owner: account.address,
+            is_anonymous: poll.config?.allowAnonymous ?? false,
+            weight: 1,
+          },
+          account.address
+        );
+
+        await new Promise((resolve, reject) => {
+          signAndExecuteTransaction(
+            { transaction: tx },
+            {
+              onSuccess: (result) => {
+                toast.success("Vote submitted successfully!");
+                console.log("Transaction result:", result);
+                resolve(result);
+              },
+              onError: (error) => {
+                toast.error("Failed to submit vote");
+                console.error("Transaction error:", error);
+                reject(error);
+              },
+            }
+          );
+        });
+      }
+
+      setHasVoted(true);
+      setSelectedOptions([]);
+    } catch (error) {
+      console.error("Vote error:", error);
+      toast.error("An error occurred while voting");
+    } finally {
+      setIsVoting(false);
+    }
   };
   
   useEffect(() => {
@@ -209,9 +267,10 @@ const PollDetailView: React.FC = () => {
                     {poll.options?.map((option) => {
                         const isSelected = selectedOptions.includes(option.id);
                         
-                        // Calculate stats
-                        //const votes = getDisplayVotes(option.id, option.votes);
-                        //const percentage = displayTotalVotes > 0 ? (votes / displayTotalVotes) * 100 : 0;
+                        // Calculate stats - using votes from poll data
+                        const votes = option.votes || 0;
+                        const percentage = totalVotes && totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                        const displayText = option.text || option.title || option.name || "Unnamed option";
                         
                         return (
                             <motion.button
@@ -245,14 +304,19 @@ const PollDetailView: React.FC = () => {
                                         {/* Image thumbnail if exists */}
                                         {option.image && (
                                             <div className="relative h-12 w-12 md:h-16 md:w-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                                                <img src={option.image} alt={option.text} className="w-full h-full object-cover" />
+                                                <img src={option.image} alt={displayText} className="w-full h-full object-cover" />
                                             </div>
                                         )}
                                         
                                         <div className="flex flex-col">
                                             <span className={`font-bold text-base md:text-lg transition-colors ${hasVoted && isSelected ? 'text-primary' : 'text-foreground'}`}>
-                                                {option.text}
+                                                {displayText}
                                             </span>
+                                            {option.caption && !hasVoted && (
+                                                <span className="text-xs text-muted-foreground font-medium">
+                                                    {option.caption}
+                                                </span>
+                                            )}
                                             {hasVoted && (
                                                  <span className="text-xs text-muted-foreground font-medium md:hidden">
                                                     {votes.toLocaleString()} votes
@@ -296,15 +360,16 @@ const PollDetailView: React.FC = () => {
                         >
                             <Button 
                                 onClick={handleVote} 
-                                disabled={selectedOptions.length === 0 || isVoting}
-                                className={`w-full py-4 text-lg font-bold shadow-lg transition-all
-                                    ${selectedOptions.length > 0 
+                                disabled={selectedOptions.length === 0 || isVoting || !account}
+                                className={`w-full py-4 text-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2
+                                    ${selectedOptions.length > 0 && account
                                         ? 'opacity-100 translate-y-0 shadow-primary/25 hover:shadow-primary/40' 
                                         : 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground shadow-none'
                                     }
                                 `}
                             >
-                                {isVoting ? 'Submitting...' : `Vote ${selectedOptions.length > 0 ? `(${selectedOptions.length})` : ''}`}
+                                {isVoting && <Loader2 className="w-4 h-4 animate-spin" />}
+                                {isVoting ? 'Submitting...' : (!account ? 'Connect Wallet to Vote' : `Vote ${selectedOptions.length > 0 ? `(${selectedOptions.length})` : ''}`)}
                             </Button>
                         </motion.div>
                     )}
