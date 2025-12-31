@@ -40,7 +40,6 @@ export const createPollTx =  ({ title, description, thumbnail, duration, options
 
 export const votePollTx = ({ poll_id, option_index, owner, is_anonymous, weight } :votePollArgs, address: string) => {
 	const tx = new Transaction();
-	
 	const ticket = tx.moveCall({
 		target: `${suiEnv.packageId}::poll::createVoteTicket`,
 		arguments: [
@@ -49,7 +48,7 @@ export const votePollTx = ({ poll_id, option_index, owner, is_anonymous, weight 
 			tx.pure.u64(option_index),
 			tx.pure.address(owner),
 			tx.pure.bool(is_anonymous),
-			tx.pure('vector<u8>', [1, 54, 66]),
+			tx.pure.option('vector<u8>', [1, 54, 66]),
 			tx.pure.u8(weight),
 		],
 		typeArguments: [],
@@ -59,12 +58,12 @@ export const votePollTx = ({ poll_id, option_index, owner, is_anonymous, weight 
 		target: `${suiEnv.packageId}::poll::vote_on_poll`,
 		arguments: [
 			tx.object(poll_id),
-			tx.object(suiEnv.versionObject),
 			ticket,
+			tx.object("0x6"),
 		],
 		typeArguments: [],
 	});
 	
-	tx.transferObjects([voteReceipt], address);
+	tx.transferObjects([voteReceipt], address); 
 	return tx
 }

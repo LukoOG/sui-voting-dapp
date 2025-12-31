@@ -28,6 +28,7 @@ export const usePollActions = () => {
 	
 	const walletVote = useMutation({
 		mutationFn: async (args: votePollArgsT) => {
+			console.log(args)
 			const tx = votePollTx(args, args.address);
 			
 			const result = await signAndExecuteTransaction({ transaction: tx });

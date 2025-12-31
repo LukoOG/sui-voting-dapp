@@ -109,7 +109,7 @@ fun init(otw: POLL, ctx: &mut TxContext){
 	let keys = vector[
 		b"name".to_string(),
 		b"description".to_string(),
-		b"image".to_string(),
+		b"image_url".to_string(),
 		b"creator".to_string(),
 		b"status".to_string(),
 		b"timing".to_string(),

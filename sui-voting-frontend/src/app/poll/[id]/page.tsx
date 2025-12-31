@@ -42,11 +42,10 @@ interface Poll {
 }
 
 const PollDetailView: React.FC = () => {
-  const params = useParams();
-  const pollId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { id } = useParams();
   const account = useCurrentAccount();
   const { walletVote } = usePollActions();
-  //console.log(pollId);
+  console.log(id);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -84,19 +83,16 @@ const PollDetailView: React.FC = () => {
 		}  
 		
 	const { data: Ns } = useResolveSuiNSName(poll?.creator)
-
-const { data, isPending } = useSuiClientQuery(
-  "getObject",
-  pollId
-    ? {
-        id: pollId,
-        options: {
-          showContent: true,
-          showOwner: true,
-        },
-      }
-    : null
-);
+  const { data, isPending } = useSuiClientQuery(
+	  "getObject",
+	  {
+		id: id,
+		options: {
+		  showOwner: true,
+		  showContent: true,
+		},
+	  }
+	);
 	
 	const totalVotes = useMemo(() => {
 		if(poll){
@@ -156,7 +152,7 @@ const { data, isPending } = useSuiClientQuery(
         await walletVote.mutateAsync({
           poll_id: id as string,
           option_index: optionIndex,
-          owner: account.address,
+          owner: account?.address ?? "",
           is_anonymous: poll.config?.allowAnonymous ?? false,
           weight: 1,
           address: account.address,
