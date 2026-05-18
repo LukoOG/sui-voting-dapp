@@ -234,7 +234,8 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	table::add<u64, ID>(&mut registery.polls, registery.next_poll_id, poll_object_id);
 	registery.next_poll_id = registery.next_poll_id + 1;
 	
-	poll
+	//poll
+	transfer::share_object(poll)
 }
 
 public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx: &mut TxContext){

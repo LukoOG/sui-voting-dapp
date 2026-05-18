@@ -132,7 +132,8 @@ fun test_version_check(){
 	);
 	
 	//to destroy the create poll request struct
-	let poll: poll::Poll = poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
+	poll::create_poll(&mut registery, create_poll_request, &clock, scenario.ctx());
+	let poll = ts::take_shared<Poll>(scenario.ctx());
 	
 	ts::return_shared(registery);
 	ts::return_shared(version);
