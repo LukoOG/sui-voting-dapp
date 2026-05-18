@@ -3,7 +3,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import suiEnv from "@/lib/sui/suiEnv";
 import { createPollArgs, votePollArgs } from "@/lib/types"
 
-export const createPollTx =  ({ title, description, thumbnail, duration, options, config }: createPollArgs, address: string) => {
+export const createPollTx =  ({ title, description, thumbnail, duration, options, config }: createPollArgs) => {
 	const tx = new Transaction()
 	
 	const request = tx.moveCall({
@@ -35,7 +35,8 @@ export const createPollTx =  ({ title, description, thumbnail, duration, options
 		typeArguments: [],
 	});
 	
-	tx.transferObjects([poll], address)
+	// Poll is shared in move contract
+	// tx.transferObjects([poll], address)
 	return tx
 }
 
@@ -65,6 +66,7 @@ export const votePollTx = ({ poll_id, option_index, owner, is_anonymous, weight 
 		typeArguments: [],
 	});
 	
+	// Receipt is transferred in move contract
 	// tx.transferObjects([voteReceipt], address); 
 	return tx
 }
