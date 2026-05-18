@@ -28,8 +28,9 @@ export const usePollActions = () => {
 	
 	const walletVote = useMutation({
 		mutationFn: async (args: votePollArgsT) => {
-			console.log(args)
-			const tx = votePollTx(args, args.address);
+			console.log("inside wallet vote", args)
+			const tx = votePollTx(args);
+			console.log("inside wallet vote", tx)
 			
 			const result = await signAndExecuteTransaction({ transaction: tx });
 			await suiClient.waitForTransaction({ digest: result.digest });

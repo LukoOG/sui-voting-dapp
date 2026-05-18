@@ -32,7 +32,7 @@ export default function ImagePreview({
 
   return (
     <div className={`overflow-hidden rounded-md border border-border ${className}`}>
-      <img
+      <Image
         src={src}
         alt={alt}
         className="w-full h-full object-cover"

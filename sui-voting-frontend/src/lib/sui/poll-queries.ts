@@ -1,9 +1,9 @@
 import { useSuiClientQuery } from '@mysten/dapp-kit';
-import suiEnv from "@/lib/sui/suiEnv";
 
 import { useEffect, useState } from "react";
 
 const SUI_GRAPHQL_ENDPOINT = "https://graphql.testnet.sui.io/graphql"; 
+
 
 export function usePaginatedPolls(page: number, pageSize: number) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,6 +61,7 @@ export function usePaginatedPolls(page: number, pageSize: number) {
       .then((res) => res.json())
       .then((data) => {
 		  //console.log(data);
+      // @ts-expect-error: Cannot guarantee type safety of node object
 		  const filteredPolls = data.data.objects.nodes.map(node => node.asMoveObject.contents.json)
         setPolls(filteredPolls);
         setHasNextPage(data.data.objects.pageInfo.hasNextPage);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useSuiClient } from "@mysten/dapp-kit";
 import { parsePollFromSui } from "@/lib/sui/parsePoll";

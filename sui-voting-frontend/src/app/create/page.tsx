@@ -1,4 +1,6 @@
 "use client";
+import Image from "next/image";
+
 import { toast } from "sonner";
 
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -244,7 +246,7 @@ const CreatePoll = () => {
 
 						return (
 						  <div className="h-60 mx-auto w-fit overflow-hidden rounded-md border border-border">
-							<img
+							<Image
 							  src={previewSrc}
 							  alt={`thumbnail image on SuiVs for ${watch("thumbnail")}`}
 							  className="w-full h-full object-cover"
@@ -352,7 +354,7 @@ const CreatePoll = () => {
 					  {/* Preview */}
 					  {imageSrc && (
 						<div className="mt-2 aspect-square relative w-full rounded-md overflow-hidden border border-border">
-						  <img
+						  <Image
 						  alt={"image option on Sui VS"}
 							src={imageSrc}
 							className="w-full h-full object-cover"

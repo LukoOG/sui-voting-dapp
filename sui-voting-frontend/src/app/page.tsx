@@ -149,7 +149,7 @@ export default function Hero() {
                     className="bg-card border border-border rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 group overflow-hidden h-full flex flex-col"
                 >
                     <div className="relative h-52 overflow-hidden">
-                        <img 
+                        <Image
                             alt={poll.title} 
                             src={poll.image} 
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" 

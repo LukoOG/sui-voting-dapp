@@ -1,8 +1,7 @@
 "use client";
-import Image from "next/image";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, TrendingUp, Clock, Vote, Wallet } from "lucide-react";
+import { Search, Filter, TrendingUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -11,97 +10,96 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { usePaginatedPolls } from "@/hooks/handlePollQueries";
 
 import PollCard from "@/components/explore/pollcard"
 import Link from "next/link";
 // Mock data for polls
-const mockPolls = [
-  {
-    id: "1",
-    title: "Best Programming Language 2024",
-    description: "Vote for your favorite programming language",
-    totalVotes: 15234,
-    timeRemaining: "2 days left",
-    isActive: true,
-    requiresWallet: false,
-    options: [
-      { text: "JavaScript", image: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400&h=300&fit=crop" },
-      { text: "Python", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop" },
-      { text: "Rust", image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=400&h=300&fit=crop" },
-    ],
-  },
-  {
-    id: "2",
-    title: "Best City to Visit in Europe",
-    description: "Which European city should I visit next?",
-    totalVotes: 8932,
-    timeRemaining: "5 days left",
-    isActive: true,
-    requiresWallet: true,
-    options: [
-      { text: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop" },
-      { text: "Barcelona", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=300&fit=crop" },
-      { text: "Rome", image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&h=300&fit=crop" },
-    ],
-  },
-  {
-    id: "3",
-    title: "Favorite Superhero Movie",
-    description: "Vote for the best superhero movie of all time",
-    totalVotes: 23451,
-    timeRemaining: "1 day left",
-    isActive: true,
-    requiresWallet: false,
-    options: [
-      { text: "The Dark Knight", image: "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=400&h=300&fit=crop" },
-      { text: "Avengers: Endgame", image: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=300&fit=crop" },
-      { text: "Spider-Man: Into the Spider-Verse", image: "https://images.unsplash.com/photo-1608889335941-32ac5f2041b9?w=400&h=300&fit=crop" },
-    ],
-  },
-  {
-    id: "4",
-    title: "Best Mobile Operating System",
-    description: "iOS vs Android - The eternal debate",
-    totalVotes: 12678,
-    timeRemaining: "3 days left",
-    isActive: true,
-    requiresWallet: false,
-    options: [
-      { text: "iOS", image: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400&h=300&fit=crop" },
-      { text: "Android", image: "https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?w=400&h=300&fit=crop" },
-    ],
-  },
-  {
-    id: "5",
-    title: "Favorite Coffee Style",
-    description: "How do you like your coffee?",
-    totalVotes: 5432,
-    timeRemaining: "6 days left",
-    isActive: true,
-    requiresWallet: false,
-    options: [
-      { text: "Espresso", image: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400&h=300&fit=crop" },
-      { text: "Cappuccino", image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=300&fit=crop" },
-      { text: "Cold Brew", image: "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400&h=300&fit=crop" },
-    ],
-  },
-  {
-    id: "6",
-    title: "Best Blockchain Platform",
-    description: "Vote for the most promising blockchain",
-    totalVotes: 9876,
-    timeRemaining: "4 days left",
-    isActive: true,
-    requiresWallet: true,
-    options: [
-      { text: "Sui", image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop" },
-      { text: "Ethereum", image: "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=400&h=300&fit=crop" },
-      { text: "Solana", image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&h=300&fit=crop" },
-    ],
-  },
-];
+// const mockPolls = [
+//   {
+//     id: "1",
+//     title: "Best Programming Language 2024",
+//     description: "Vote for your favorite programming language",
+//     totalVotes: 15234,
+//     timeRemaining: "2 days left",
+//     isActive: true,
+//     requiresWallet: false,
+//     options: [
+//       { text: "JavaScript", image: "https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?w=400&h=300&fit=crop" },
+//       { text: "Python", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop" },
+//       { text: "Rust", image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=400&h=300&fit=crop" },
+//     ],
+//   },
+//   {
+//     id: "2",
+//     title: "Best City to Visit in Europe",
+//     description: "Which European city should I visit next?",
+//     totalVotes: 8932,
+//     timeRemaining: "5 days left",
+//     isActive: true,
+//     requiresWallet: true,
+//     options: [
+//       { text: "Paris", image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop" },
+//       { text: "Barcelona", image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=300&fit=crop" },
+//       { text: "Rome", image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&h=300&fit=crop" },
+//     ],
+//   },
+//   {
+//     id: "3",
+//     title: "Favorite Superhero Movie",
+//     description: "Vote for the best superhero movie of all time",
+//     totalVotes: 23451,
+//     timeRemaining: "1 day left",
+//     isActive: true,
+//     requiresWallet: false,
+//     options: [
+//       { text: "The Dark Knight", image: "https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?w=400&h=300&fit=crop" },
+//       { text: "Avengers: Endgame", image: "https://images.unsplash.com/photo-1635805737707-575885ab0820?w=400&h=300&fit=crop" },
+//       { text: "Spider-Man: Into the Spider-Verse", image: "https://images.unsplash.com/photo-1608889335941-32ac5f2041b9?w=400&h=300&fit=crop" },
+//     ],
+//   },
+//   {
+//     id: "4",
+//     title: "Best Mobile Operating System",
+//     description: "iOS vs Android - The eternal debate",
+//     totalVotes: 12678,
+//     timeRemaining: "3 days left",
+//     isActive: true,
+//     requiresWallet: false,
+//     options: [
+//       { text: "iOS", image: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=400&h=300&fit=crop" },
+//       { text: "Android", image: "https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?w=400&h=300&fit=crop" },
+//     ],
+//   },
+//   {
+//     id: "5",
+//     title: "Favorite Coffee Style",
+//     description: "How do you like your coffee?",
+//     totalVotes: 5432,
+//     timeRemaining: "6 days left",
+//     isActive: true,
+//     requiresWallet: false,
+//     options: [
+//       { text: "Espresso", image: "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?w=400&h=300&fit=crop" },
+//       { text: "Cappuccino", image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&h=300&fit=crop" },
+//       { text: "Cold Brew", image: "https://images.unsplash.com/photo-1517487881594-2787fef5ebf7?w=400&h=300&fit=crop" },
+//     ],
+//   },
+//   {
+//     id: "6",
+//     title: "Best Blockchain Platform",
+//     description: "Vote for the most promising blockchain",
+//     totalVotes: 9876,
+//     timeRemaining: "4 days left",
+//     isActive: true,
+//     requiresWallet: true,
+//     options: [
+//       { text: "Sui", image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=300&fit=crop" },
+//       { text: "Ethereum", image: "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=400&h=300&fit=crop" },
+//       { text: "Solana", image: "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=400&h=300&fit=crop" },
+//     ],
+//   },
+// ];
 
 const Explore = () => {
   const [searchQuery, setSearchQuery] = useState("");

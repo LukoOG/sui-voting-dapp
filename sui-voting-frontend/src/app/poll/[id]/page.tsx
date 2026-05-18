@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -14,45 +15,13 @@ import { usePollActions } from "@/hooks/handlePollActions";
 import { toast } from "sonner";
 import { usePollWithVotes } from "@/hooks/usePollWithVotes";
 
-interface PollOption {
-  id: string;
-  text: string;
-  name: string;
-  votes: number;
-  image?: string;
-  caption?: string;
-}
-
-interface PollConfig {
-  allowAnonymous: boolean;
-  allowMultiple: boolean;
-  weightedVotes: boolean;
-}
-
-interface Poll {
-  id: number;
-  objectId: string;
-  title: string;
-  image: string;
-  totalVotes: number;
-  creator: string;
-  category?: string;
-  description?: string;
-  options: PollOption[];
-  config: PollConfig;
-  endsAt?: string;
-  close_time: string;
-  start_time: string;
-  is_active: boolean;
-}
-
 const PollDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const account = useCurrentAccount();
   const { walletVote } = usePollActions();
   
   // Use the new hook to fetch poll with vote counts
-  const { poll, loading: isPending, error } = usePollWithVotes(id as string);
+  const { poll, loading: isPending } = usePollWithVotes(id as string);
   
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
@@ -266,7 +235,7 @@ const PollDetailView: React.FC = () => {
                         {/* Image thumbnail if exists */}
                         {option.image && (
                           <div className="relative h-12 w-12 md:h-16 md:w-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                            <img
+                            <Image
                               src={option.image}
                               alt={displayText}
                               className="w-full h-full object-cover"
@@ -376,7 +345,7 @@ const PollDetailView: React.FC = () => {
           {/* Poll Image Card */}
           <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             <div className="aspect-video w-full overflow-hidden relative">
-              <img
+              <Image
                 src={poll.image}
                 alt={poll.title}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
@@ -434,6 +403,7 @@ const PollDetailView: React.FC = () => {
           <Button
             variant="secondary"
             className="w-full flex items-center justify-center gap-2 py-3"
+            onClick={()=>setShowCopied(prev => !prev)}
           >
             <Share className="w-4 h-4" />
             {showCopied ? "Link Copied!" : "Share Poll"}

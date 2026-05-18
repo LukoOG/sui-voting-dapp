@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PollFields } from "@/lib/types";
 
 export type PollPreview = {
@@ -59,31 +60,33 @@ export function parsePollFromSui(fields: PollFields): ParsedPoll {
   };
 
   // Parse options with vote counts
-  const options: ParsedPollOption[] = (fields.options || []).map((option, index) => {
-    const optionFields = option.fields;
-    
-    return {
-      id: String(index), // Use index as ID for consistency
-      text: optionFields.name || `Option ${index + 1}`,
-      name: optionFields.name || `Option ${index + 1}`,
-      votes: 0, // Will be populated from votes table
-      image: optionFields.image_url || undefined,
-      caption: optionFields.caption || undefined,
-    };
-  });
+  const options: ParsedPollOption[] = (fields.options || []).map(
+    (option, index) => {
+      const optionFields = option.fields;
+
+      return {
+        id: String(index), // Use index as ID for consistency
+        text: optionFields.name || `Option ${index + 1}`,
+        name: optionFields.name || `Option ${index + 1}`,
+        votes: 0, // Will be populated from votes table
+        image: optionFields.image_url || undefined,
+        caption: optionFields.caption || undefined,
+      };
+    },
+  );
 
   // Calculate total votes from the votes table
   // The votes table is a Sui Table<u64, u64> mapping option_index -> vote_count
-  let totalVotes = 0;
-  
+  const totalVotes = 0;
+
   // Note: Sui Tables in GraphQL don't expose their contents directly
   // You need to query them separately or use dynamic fields
   // For now, we'll set votes to 0 and you'll need to fetch them via dynamic fields
-  
+
   // Parse timestamps
   const closeTime = fields.close_time;
   const startTime = fields.start_time;
-  
+
   // Create ISO date string for endsAt
   const endsAt = new Date(parseInt(closeTime)).toISOString();
 
@@ -112,7 +115,7 @@ export function parsePollFromSui(fields: PollFields): ParsedPoll {
 export async function fetchVoteCounts(
   pollObjectId: string,
   optionCount: number,
-  suiClient: any
+  suiClient: any,
 ): Promise<Map<number, number>> {
   const voteCounts = new Map<number, number>();
 
@@ -140,7 +143,9 @@ export async function fetchVoteCounts(
           },
         });
 
-        const voteCount = parseInt(voteData?.data?.content?.fields?.value || "0");
+        const voteCount = parseInt(
+          voteData?.data?.content?.fields?.value || "0",
+        );
         voteCounts.set(i, voteCount);
       } else {
         voteCounts.set(i, 0);
@@ -160,16 +165,16 @@ export async function fetchVoteCounts(
  */
 export async function parsePollWithVotes(
   fields: PollFields,
-  suiClient: any
+  suiClient: any,
 ): Promise<ParsedPoll> {
   const poll = parsePollFromSui(fields);
-  
+
   try {
     // Fetch vote counts for each option
     const voteCounts = await fetchVoteCounts(
       poll.objectId,
       poll.options.length,
-      suiClient
+      suiClient,
     );
 
     // Update options with vote counts

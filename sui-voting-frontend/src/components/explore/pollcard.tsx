@@ -4,7 +4,8 @@ import { Clock, Vote, Wallet } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 
-interface PollOption {
+//export for image preview
+export interface PollOption {
   id: string;
   name: string;
   text?: string;
@@ -35,61 +36,60 @@ interface PollCardProps {
 }
 
 function PollCard({ poll, index }: PollCardProps) {
-	getPreviewImages(
-		poll.options,
-		poll.thumbnail_url
-	);	const noOfVotes = () => Number(poll.voters.size) + Number(poll.anon_voters.size)
-		  
-	const optionImages = poll.options.filter(
-		  (opt) => opt.image_url && opt.image_url.length > 0
-		);
+  getPreviewImages(poll.options, poll.thumbnail_url);
+  const noOfVotes = () =>
+    Number(poll.voters.size) + Number(poll.anon_voters.size);
 
-	const showGrid = optionImages.length >= 3;
-	return(
-	<motion.div
-		  key={poll.id}
-		  initial={{ opacity: 0, y: 20 }}
-		  animate={{ opacity: 1, y: 0 }}
-		  transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
-		>
+  const optionImages = poll.options.filter(
+    (opt): opt is typeof opt & { image_url: string } =>
+      opt.image_url !== undefined && opt.image_url.length > 0,
+  );
+
+  const showGrid = optionImages.length >= 3;
+  return (
+    <motion.div
+      key={poll.id}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
+    >
       <div className="group cursor-pointer">
         <div className="bg-card-bg border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:border-accent/50 transition-all">
-
           {/* Options Preview */}
-		{showGrid ? (
-		  <div className="grid grid-cols-3 gap-1 p-1">
-			{optionImages.slice(0, 3).map((option, idx) => (
-			  <div
-				key={idx}
-				className="relative aspect-square overflow-hidden rounded-lg"
-			  >
-				<Image
-				  src={option.image_url}
-				  alt={option.text}
-				  width={400}
-				  height={400}
-				  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-				/>
-				<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
-				  <span className="text-white text-xs font-medium truncate">
-					{option.text}
-				  </span>
-				</div>
-			  </div>
-			))}
-		  </div>
-		) : (
-		  <div className="relative aspect-[16/9] overflow-hidden">
-			<Image
-			  src={poll.thumbnail_url}
-			  alt={poll.title}
-			  width={800}
-			  height={450}
-			  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-			/>
-			<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-		  </div>
-		)}
+          {showGrid ? (
+            <div className="grid grid-cols-3 gap-1 p-1">
+              {optionImages.slice(0, 3).map((option, idx) => (
+                <div
+                  key={idx}
+                  className="relative aspect-square overflow-hidden rounded-lg"
+                >
+                  <Image
+                    src={option.image_url}
+                    alt={option.text ?? "Poll option"}
+                    width={400}
+                    height={400}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
+                    <span className="text-white text-xs font-medium truncate">
+                      {option.text}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="relative aspect-[16/9] overflow-hidden">
+              <Image
+                src={poll.thumbnail_url}
+                alt={poll.title}
+                width={800}
+                height={450}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            </div>
+          )}
 
           {/* Poll Info */}
           <div className="p-4">
@@ -125,6 +125,6 @@ function PollCard({ poll, index }: PollCardProps) {
         </div>
       </div>
     </motion.div>
-)
+  );
 }
-export default PollCard
+export default PollCard;
