@@ -104,7 +104,7 @@ export default function Hero() {
                 Start Voting Now
             </motion.button>
           </Link>
-          <Link href="/create" className="w-full sm:w-auto" onClick={(e) => e.preventDefault()}>
+          <Link href="/create" className="w-full sm:w-auto">
             <motion.button 
                 whileHover={{ scale: 1.05, backgroundColor: "var(--secondary)" }}
                 whileTap={{ scale: 0.95 }}
