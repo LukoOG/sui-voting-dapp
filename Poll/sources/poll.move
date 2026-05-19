@@ -173,7 +173,7 @@ public fun createCreatePollRequest(
 	assert!(option_names.length() > 1, EInvalidNoOfOptions);
 	if(!option_images.is_empty()){ assert!(option_images.length() == option_names.length(), EUnequalLength); };
 	
-	let mut poll_options: vector<PollOption> = vector::empty<PollOption>();
+	let mut poll_options: vector<PollOption> = vector[];
 	let len: u64 = option_names.length();
 	let mut i: u64 = 0;
 	while (i < len) {
@@ -201,7 +201,7 @@ public fun createVoteTicket(version: &poll::version::Version, poll: &mut Poll,op
 }
 
 //Tx functions
-public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext): Poll {
+public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreatePollRequest, clock: &Clock, ctx: &mut TxContext) {
 	//assert!();
 	let CreatePollRequest { title, description, thumbnail_url, duration, options, poll_config } = createPollRequest; //input validation done on request constructor
 	
@@ -235,7 +235,7 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 	registery.next_poll_id = registery.next_poll_id + 1;
 	
 	//poll
-	transfer::share_object(poll)
+	transfer::share_object(poll);
 }
 
 public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx: &mut TxContext){
