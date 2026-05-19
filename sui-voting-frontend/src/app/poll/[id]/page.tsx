@@ -32,13 +32,14 @@ const PollDetailView: React.FC = () => {
 
   const totalVotes = useMemo(() => {
     if (poll) {
+      console.log(poll)
       return poll.totalVotes;
     }
   }, [poll]);
 
   const timeRemaining = useMemo(() => {
     if (!poll?.close_time) return "Timeless";
-    const diff = new Date(poll.close_time).getTime() - new Date().getTime();
+    const diff = new Date(Number(poll.close_time)).getTime() - new Date().getTime();
     if (diff < 0) return "Poll ended";
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
