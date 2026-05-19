@@ -151,7 +151,9 @@ export default function Hero() {
                     <div className="relative h-52 overflow-hidden">
                         <Image
                             alt={poll.title} 
-                            src={poll.image} 
+                            src={poll.image}
+                            height={1024}
+                            width={1024} 
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" 
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-80"></div>

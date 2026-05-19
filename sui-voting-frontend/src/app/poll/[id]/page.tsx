@@ -7,10 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Vote, Check, Clock, Share, ArrowLeft, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
-import {
-  useResolveSuiNSName,
-  useCurrentAccount,
-} from "@mysten/dapp-kit";
+import { useResolveSuiNSName, useCurrentAccount } from "@mysten/dapp-kit";
 import { usePollActions } from "@/hooks/handlePollActions";
 import { toast } from "sonner";
 import { usePollWithVotes } from "@/hooks/usePollWithVotes";
@@ -19,10 +16,10 @@ const PollDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const account = useCurrentAccount();
   const { walletVote } = usePollActions();
-  
+
   // Use the new hook to fetch poll with vote counts
   const { poll, loading: isPending } = usePollWithVotes(id as string);
-  
+
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [hasVoted, setHasVoted] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
@@ -86,8 +83,7 @@ const PollDetailView: React.FC = () => {
 
       // Execute vote for each selected option
       for (const optionId of selectedOptions) {
-        const optionIndex =
-          poll.options.findIndex((o) => o.id === optionId);
+        const optionIndex = poll.options.findIndex((o) => o.id === optionId);
 
         if (optionIndex === -1) {
           toast.error("Invalid option selected");
@@ -194,9 +190,7 @@ const PollDetailView: React.FC = () => {
                 const percentage =
                   totalVotes && totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
                 const displayText =
-                  option.text ||
-                  option.name ||
-                  "Unnamed option";
+                  option.text || option.name || "Unnamed option";
 
                 return (
                   <motion.button
@@ -236,6 +230,8 @@ const PollDetailView: React.FC = () => {
                         {option.image && (
                           <div className="relative h-12 w-12 md:h-16 md:w-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
                             <Image
+                              height={1024}
+                              width={1024}
                               src={option.image}
                               alt={displayText}
                               className="w-full h-full object-cover"
@@ -346,6 +342,8 @@ const PollDetailView: React.FC = () => {
           <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
             <div className="aspect-video w-full overflow-hidden relative">
               <Image
+                height={1024}
+                width={1024}
                 src={poll.image}
                 alt={poll.title}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
@@ -403,7 +401,7 @@ const PollDetailView: React.FC = () => {
           <Button
             variant="secondary"
             className="w-full flex items-center justify-center gap-2 py-3"
-            onClick={()=>setShowCopied(prev => !prev)}
+            onClick={() => setShowCopied((prev) => !prev)}
           >
             <Share className="w-4 h-4" />
             {showCopied ? "Link Copied!" : "Share Poll"}
