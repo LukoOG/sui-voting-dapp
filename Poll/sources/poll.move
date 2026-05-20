@@ -10,8 +10,12 @@ use sui::clock::Clock;
 const EInvalidOption: u64 = 11;
 const EInvalidNoOfOptions: u64 = 12;
 const EUnequalLength :u64 = 13;
+const EAnonWeightNotOne: u64 = 14;
 const EInvalidConfigLength: u64 = 15;
-const EAlreadyVoted: u64 = 16;
+
+const EAlreadyVotedPublic: u64 = 16;
+const EAlreadyVotedAnon: u64 = 17;
+const EAlreadyVotedForOption: u64 = 18;
 
 const EPollClosed: u64 = 102;
 const EPollNotActive: u64 = 103;
@@ -40,8 +44,8 @@ public struct PollRegistery has key{
 
 public struct PollConfig has store, drop {
 		//setting fields
-	allow_anon_vote: bool, //allow creators to allow or prevent anon users from voting
-	allow_multiple_choice: bool,
+	allow_anon_vote: bool, //allow or prevent anon users from voting
+	allow_multiple_choice: bool, //allow voting more than 1 option_index
 	allow_weighted: bool, //wallet votes count more than anon votes
 }
 
@@ -250,12 +254,12 @@ public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx:
 
 	
 	if(is_anon == false){
-		assert!(!table::contains(&poll.voters, owner), EAlreadyVoted); //prevent double voting
+		assert!(!table::contains(&poll.voters, owner), EAlreadyVotedPublic); //prevent double voting
 		table::add(&mut poll.voters, owner, option_index);
 	}else{
 		let anon_id = anon.extract();
-		assert!(!table::contains(&poll.anon_voters, anon_id), EAlreadyVoted);
-		assert!(weight == 1, 12); //anonymous weight must always be 1
+		assert!(!table::contains(&poll.anon_voters, anon_id), EAlreadyVotedAnon);
+		assert!(weight == 1, EAnonWeightNotOne); //anonymous weight must always be 1
 		table::add(&mut poll.anon_voters, anon_id, option_index);
 	};
 	
@@ -305,6 +309,7 @@ public(package) fun poll_tables(self: &Poll): (&table::Table<u64, u64>, &table::
 	(&self.votes, &self.voters, &self.anon_voters)
 }
 
+#[test_only]
 public(package) fun receipt_fields(self: &VoteReceipt): (&ID, &address, &u64, &u8) { 
 	(&self.poll_id, &self.voter, &self.option_index, &self.weight)
 }
