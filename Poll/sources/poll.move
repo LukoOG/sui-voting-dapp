@@ -15,7 +15,6 @@ const EInvalidConfigLength: u64 = 15;
 
 const EAlreadyVotedPublic: u64 = 16;
 const EAlreadyVotedAnon: u64 = 17;
-const EAlreadyVotedForOption: u64 = 18;
 
 const EPollClosed: u64 = 102;
 const EPollNotActive: u64 = 103;
@@ -63,8 +62,8 @@ public struct Poll has key, store{
 	poll_config: PollConfig,
 	options: vector<PollOption>,
 	votes: table::Table<u64, u64>, //option index → voter count
-	voters: table::Table<address, u64>, //web3 voters address → option index
-	anon_voters: table::Table<ID, u64>, //anonymous voters → option index
+	voters: table::Table<address, vector<u64>>, //web3 voters address → option index
+	anon_voters: table::Table<ID, vector<u64>>, //anonymous voters → option index
 }
 
 
@@ -230,8 +229,8 @@ public fun create_poll(registery: &mut PollRegistery, createPollRequest: CreateP
 				poll_config,
 				options,
 				votes: votes_table,
-				voters: table::new<address, u64>(ctx),
-				anon_voters: table::new<ID, u64>(ctx),
+				voters: table::new<address, vector<u64>>(ctx),
+				anon_voters: table::new<ID, vector<u64>>(ctx),
 	};
 					
 	let poll_object_id = object::uid_to_inner(&poll.id);	
@@ -255,12 +254,12 @@ public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx:
 	
 	if(is_anon == false){
 		assert!(!table::contains(&poll.voters, owner), EAlreadyVotedPublic); //prevent double voting
-		table::add(&mut poll.voters, owner, option_index);
+		
 	}else{
 		let anon_id = anon.extract();
 		assert!(!table::contains(&poll.anon_voters, anon_id), EAlreadyVotedAnon);
 		assert!(weight == 1, EAnonWeightNotOne); //anonymous weight must always be 1
-		table::add(&mut poll.anon_voters, anon_id, option_index);
+		
 	};
 	
 	let count = table::borrow_mut<u64, u64>(&mut poll.votes, option_index);
@@ -305,7 +304,7 @@ public(package) fun poll_fields(self: &mut Poll): (&u64, &String, &mut option::O
 }
 
 #[test_only]
-public(package) fun poll_tables(self: &Poll): (&table::Table<u64, u64>, &table::Table<address, u64>, &table::Table<ID, u64>) {
+public(package) fun poll_tables(self: &Poll): (&table::Table<u64, u64>, &table::Table<address, vector<u64>>, &table::Table<ID, vector<u64>>) {
 	(&self.votes, &self.voters, &self.anon_voters)
 }
 
