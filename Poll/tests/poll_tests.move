@@ -303,7 +303,7 @@ fun test_double_wallet_poll_vote() {
     let option_names = vector<String>[b"12".to_string(), b"23".to_string()];
     let option_images = vector<option::Option<String>>[option::none(), option::none()];
     let option_captions = vector<option::Option<String>>[option::none()];
-    let config_bools = vector[true, true, true];
+    let config_bools = vector[true, false, true]; //multiple choice is false
 
     let clock = scenario.take_shared<Clock>();
     let mut registery = scenario.take_shared<poll::PollRegistery>();
