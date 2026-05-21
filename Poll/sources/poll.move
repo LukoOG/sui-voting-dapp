@@ -225,6 +225,7 @@ public fun createVoteTicket(
     is_anon: bool,
     mut key: option::Option<vector<u8>>,
     weight: u8,
+    ctx: &mut TxContext,
 ): VoteTicket {
     poll::version::check_is_valid(version);
     let anon_id = if (is_anon) {
@@ -232,7 +233,9 @@ public fun createVoteTicket(
         let id = poll::anon::try_claim_anon(
             &mut poll.id, 
             extracted_key, 
-            EAlreadyVotedAnon); //early fail if multiple choice is false
+            poll.poll_config.allow_multiple_choice,
+            EAlreadyVotedAnon,
+            ctx); //early fail if multiple choice is false
         option::some(id)
     } else {
         option::none()

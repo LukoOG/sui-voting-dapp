@@ -107,6 +107,7 @@ public fun wallet_vote_ticket(
     option_index: u64,
     voter: address,
     weight: u8,
+    scenario: &mut Scenario,
 ): VoteTicket {
     poll::createVoteTicket(
         version,
@@ -116,6 +117,7 @@ public fun wallet_vote_ticket(
         false,          // not anonymous
         option::none(), // no key needed
         weight,
+        scenario.ctx()
     )
 }
 
@@ -127,6 +129,7 @@ public fun anon_vote_ticket(
     voter: address,
     key: vector<u8>,
     weight: u8,
+    scenario: &mut Scenario
 ): VoteTicket {
     poll::createVoteTicket(
         version,
@@ -136,6 +139,7 @@ public fun anon_vote_ticket(
         true,
         option::some(key),
         weight,
+        scenario.ctx()
     )
 }
 

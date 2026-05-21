@@ -89,7 +89,7 @@ fun test_wallet_poll_vote() {
     scenario.next_tx(User1);
     let mut poll = ts::take_shared<Poll>(&scenario);
 
-    let ticket = helpers::wallet_vote_ticket(&version, &mut poll, 1, scenario.ctx().sender(), 1);
+    let ticket = helpers::wallet_vote_ticket(&version, &mut poll, 1, scenario.ctx().sender(), 1, &mut scenario);
     poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
 
     scenario.next_tx(User1);
@@ -123,8 +123,8 @@ fun test_double_wallet_poll_vote() {
     scenario.next_tx(User1);
     let mut poll = ts::take_shared<Poll>(&scenario);
 
-    let ticket1 = helpers::wallet_vote_ticket(&version, &mut poll, 0, scenario.ctx().sender(), 1);
-    let ticket2 = helpers::wallet_vote_ticket(&version, &mut poll, 1, scenario.ctx().sender(), 1);
+    let ticket1 = helpers::wallet_vote_ticket(&version, &mut poll, 0, scenario.ctx().sender(), 1, &mut scenario);
+    let ticket2 = helpers::wallet_vote_ticket(&version, &mut poll, 1, scenario.ctx().sender(), 1, &mut scenario);
 
     poll::vote_on_poll(&mut poll, ticket1, &clock, scenario.ctx());
     scenario.next_tx(User1);
@@ -178,8 +178,8 @@ fun test_double_wallet_poll_vote_fail() {
     scenario.next_tx(User1);
     let mut poll = ts::take_shared<Poll>(&scenario);
 
-    let ticket_1 = helpers::wallet_vote_ticket(&version, &mut poll, 1, scenario.ctx().sender(), 1);
-    let ticket_2 = helpers::wallet_vote_ticket(&version, &mut poll, 0, scenario.ctx().sender(), 1);
+    let ticket_1 = helpers::wallet_vote_ticket(&version, &mut poll, 1, scenario.ctx().sender(), 1, &mut scenario);
+    let ticket_2 = helpers::wallet_vote_ticket(&version, &mut poll, 0, scenario.ctx().sender(), 1, &mut scenario);
 
     poll::vote_on_poll(&mut poll, ticket_1, &clock, scenario.ctx());
     poll::vote_on_poll(&mut poll, ticket_2, &clock, scenario.ctx()); // expected to abort
@@ -211,6 +211,7 @@ fun test_anonymous_poll_vote() {
         scenario.ctx().sender(),
         b"key for anon",
         1,
+        &mut scenario
     );
     poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx());
 
@@ -256,6 +257,7 @@ fun test_double_anonymous_poll_vote() {
         scenario.ctx().sender(),
         b"key for anon",
         1,
+        &mut scenario
     );
 
     let ticket2 = helpers::anon_vote_ticket(
@@ -263,8 +265,9 @@ fun test_double_anonymous_poll_vote() {
         &mut poll,
         1,
         scenario.ctx().sender(),
-        b"key1 for anon",
+        b"key for anon",
         1,
+        &mut scenario
     );
 
     poll::vote_on_poll(&mut poll, ticket1, &clock, scenario.ctx());
@@ -330,14 +333,16 @@ fun test_double_anonymous_poll_vote_fail() {
         scenario.ctx().sender(),
         b"key for anon",
         1,
+        &mut scenario
     );
     let ticket2 = helpers::anon_vote_ticket(
         &version,
         &mut poll,
         1,
         scenario.ctx().sender(),
-        b"key for anon", //different key
+        b"key for anon", 
         1,
+        &mut scenario
     );
     poll::vote_on_poll(&mut poll, ticket1, &clock, scenario.ctx());
     poll::vote_on_poll(&mut poll, ticket2, &clock, scenario.ctx()); //expected to abort
@@ -368,6 +373,7 @@ fun test_anonymous_poll_vote_bad_weight() {
         scenario.ctx().sender(),
         b"key for anon",
         2, //wrong weight
+        &mut scenario
     );
     poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx()); // expected to abort
 
