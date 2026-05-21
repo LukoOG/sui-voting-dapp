@@ -102,7 +102,7 @@ fun test_wallet_poll_vote() {
 
     let (votes_table, _, _) = poll::poll_tables(&poll);
     assert!(table::borrow(votes_table, *index) == 1, 1); // voted option
-    assert!(table::borrow(votes_table, 0) == 0, 1);      // unvoted option
+    assert!(table::borrow(votes_table, 0) == 0, 1); // unvoted option
 
     helpers::return_env(clock, registery, version);
     poll::destroy_poll(poll);
@@ -110,8 +110,55 @@ fun test_wallet_poll_vote() {
     scenario.end();
 }
 
-#[test, expected_failure(abort_code = ::poll::poll::EAlreadyVotedPublic)]
+#[test]
 fun test_double_wallet_poll_vote() {
+    let mut scenario = ts::begin(User1);
+
+    helpers::setup_env(&mut scenario);
+    scenario.next_tx(User1);
+
+    let (clock, mut registery, version) = helpers::take_env(&scenario);
+    helpers::create_default_poll(&mut registery, &version, &clock, &mut scenario);
+
+    scenario.next_tx(User1);
+    let mut poll = ts::take_shared<Poll>(&scenario);
+
+    let ticket1 = helpers::wallet_vote_ticket(&version, &mut poll, 0, scenario.ctx().sender(), 1);
+    let ticket2 = helpers::wallet_vote_ticket(&version, &mut poll, 1, scenario.ctx().sender(), 1);
+
+    poll::vote_on_poll(&mut poll, ticket1, &clock, scenario.ctx());
+    scenario.next_tx(User1);
+    let receipt1 = scenario.take_from_sender<poll::VoteReceipt>();
+
+    poll::vote_on_poll(&mut poll, ticket2, &clock, scenario.ctx());
+    scenario.next_tx(User1);
+    let receipt2 = scenario.take_from_sender<poll::VoteReceipt>();
+
+    let (_id, voter, index, weight) = poll::receipt_fields(&receipt1);
+    assert!(voter == scenario.ctx().sender(), 1);
+    assert!(index == 0, 1);
+    assert!(weight == 1, 1);
+
+    let (_id, voter, index, weight) = poll::receipt_fields(&receipt2);
+
+    assert!(voter == scenario.ctx().sender(), 1);
+    assert!(index == 1, 1);
+    assert!(weight == 1, 1);
+
+    //2 options: both should be voted
+    let (votes_table, _, _) = poll::poll_tables(&poll);
+    assert!(table::borrow(votes_table, 0) == 1, 1); // voted option
+    assert!(table::borrow(votes_table, 1) == 1, 1); // voted option
+
+    helpers::return_env(clock, registery, version);
+    poll::destroy_poll(poll);
+    poll::destroy_receipt(receipt1);
+    poll::destroy_receipt(receipt2);
+    scenario.end();
+}
+
+#[test, expected_failure(abort_code = ::poll::poll::EAlreadyVotedPublic)]
+fun test_double_wallet_poll_vote_fail() {
     let mut scenario = ts::begin(User1);
 
     helpers::setup_env(&mut scenario);
@@ -189,6 +236,117 @@ fun test_anonymous_poll_vote() {
     scenario.end();
 }
 
+#[test]
+fun test_double_anonymous_poll_vote() {
+    let mut scenario = ts::begin(User1);
+
+    helpers::setup_env(&mut scenario);
+    scenario.next_tx(User1);
+
+    let (clock, mut registery, version) = helpers::take_env(&scenario);
+    helpers::create_default_poll(&mut registery, &version, &clock, &mut scenario);
+    
+    scenario.next_tx(User1);
+    let mut poll = ts::take_shared<Poll>(&scenario);
+
+    let ticket1 = helpers::anon_vote_ticket(
+        &version,
+        &mut poll,
+        0,
+        scenario.ctx().sender(),
+        b"key for anon",
+        1,
+    );
+
+    let ticket2 = helpers::anon_vote_ticket(
+        &version,
+        &mut poll,
+        1,
+        scenario.ctx().sender(),
+        b"key1 for anon",
+        1,
+    );
+
+    poll::vote_on_poll(&mut poll, ticket1, &clock, scenario.ctx());
+    scenario.next_tx(User1);
+    let receipt1 = scenario.take_from_sender<poll::VoteReceipt>();
+
+    poll::vote_on_poll(&mut poll, ticket2, &clock, scenario.ctx());
+    scenario.next_tx(User1);
+    let receipt2 = scenario.take_from_sender<poll::VoteReceipt>();
+
+    let (_id, voter, index, weight) = poll::receipt_fields(&receipt1);
+
+    assert!(voter == scenario.ctx().sender(), 1);
+    assert!(index == 0, 1);
+    assert!(weight == 1, 1);
+
+    let (_id, voter, index, weight) = poll::receipt_fields(&receipt2);
+
+    assert!(voter == scenario.ctx().sender(), 1);
+    assert!(index == 1, 1);
+    assert!(weight == 1, 1);
+
+    let (votes_table, public_voters, anon_voters) = poll::poll_tables(&poll);
+    assert!(table::borrow(votes_table, 0) == 1, 1); //voted option
+    assert!(table::borrow(votes_table, 1) == 1, 1); //voted option
+
+    // Anonymous vote: public voters table stays empty, anon table grows
+    assert!(table::is_empty(public_voters), 1);
+    assert!(table::length(anon_voters) == 2, 1); //two votes
+
+    helpers::return_env(clock, registery, version);
+    poll::destroy_poll(poll);
+    poll::destroy_receipt(receipt1);
+    poll::destroy_receipt(receipt2);
+    scenario.end();
+}
+
+//anon module calls the error
+#[test, expected_failure(abort_code = 17)]
+fun test_double_anonymous_poll_vote_fail() {
+    let mut scenario = ts::begin(User1);
+
+    helpers::setup_env(&mut scenario);
+    scenario.next_tx(User1);
+
+    let (clock, mut registery, version) = helpers::take_env(&scenario);
+    
+    // multiple-choice is false (second bool) to trigger EAlreadyVotedAnon
+    helpers::create_poll_with_config(
+        &mut registery,
+        &version,
+        &clock,
+        vector[true, false, true],
+        &mut scenario,
+    );
+    scenario.next_tx(User1);
+    let mut poll = ts::take_shared<Poll>(&scenario);
+
+    let ticket1 = helpers::anon_vote_ticket(
+        &version,
+        &mut poll,
+        0,
+        scenario.ctx().sender(),
+        b"key for anon",
+        1,
+    );
+    let ticket2 = helpers::anon_vote_ticket(
+        &version,
+        &mut poll,
+        1,
+        scenario.ctx().sender(),
+        b"key for anon", //different key
+        1,
+    );
+    poll::vote_on_poll(&mut poll, ticket1, &clock, scenario.ctx());
+    poll::vote_on_poll(&mut poll, ticket2, &clock, scenario.ctx()); //expected to abort
+
+    helpers::return_env(clock, registery, version);
+    poll::destroy_poll(poll);
+    scenario.end();
+}
+
 #[test, expected_failure(abort_code = ::poll::poll::EAnonWeightNotOne)]
 fun test_anonymous_poll_vote_bad_weight() {
     let mut scenario = ts::begin(User1);
@@ -209,7 +367,7 @@ fun test_anonymous_poll_vote_bad_weight() {
         1,
         scenario.ctx().sender(),
         b"key for anon",
-        2,
+        2, //wrong weight
     );
     poll::vote_on_poll(&mut poll, ticket, &clock, scenario.ctx()); // expected to abort
 

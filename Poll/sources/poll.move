@@ -10,7 +10,6 @@ use sui::table;
 const EInvalidOption: u64 = 11;
 const EInvalidNoOfOptions: u64 = 12;
 const EUnequalLength: u64 = 13;
-const EAnonWeightNotOne: u64 = 14;
 const EInvalidConfigLength: u64 = 15;
 
 const EAlreadyVotedPublic: u64 = 16;
@@ -21,6 +20,8 @@ const EPollClosed: u64 = 102;
 const EPollNotActive: u64 = 103;
 const EPollNotStarted: u64 = 105;
 
+const EAnonWeightNotOne: u64 = 14;
+const EAnonNotAllowed: u64 = 140;
 ///constants
 const Poll_Config_Max_Length: u8 = 3; //current number of fields in pollconfig struct
 
@@ -228,7 +229,10 @@ public fun createVoteTicket(
     poll::version::check_is_valid(version);
     let anon_id = if (is_anon) {
         let extracted_key = option::extract(&mut key);
-        let id = poll::anon::claim_anon(&mut poll.id, extracted_key);
+        let id = poll::anon::try_claim_anon(
+            &mut poll.id, 
+            extracted_key, 
+            EAlreadyVotedAnon); //early fail if multiple choice is false
         option::some(id)
     } else {
         option::none()
@@ -293,35 +297,34 @@ public fun vote_on_poll(poll: &mut Poll, ticket: VoteTicket, clock: &Clock, ctx:
     assert!(option_index < vector::length(&poll.options), EInvalidOption);
 
     if (is_anon == false) {
-        if (poll.poll_config.allow_multiple_choice) { 
-			if (table::contains(&poll.voters, owner)) {
+        if (poll.poll_config.allow_multiple_choice) {
+            if (table::contains(&poll.voters, owner)) {
                 let chosen = table::borrow_mut(&mut poll.voters, owner);
                 assert!(!vector::contains(chosen, &option_index), EAlreadyVotedForOption);
                 vector::push_back(chosen, option_index);
-            } else { 
-				table::add(&mut poll.voters, owner, vector[option_index]); 
-			} 
-		} else {
+            } else {
+                table::add(&mut poll.voters, owner, vector[option_index]);
+            }
+        } else {
             assert!(!table::contains(&poll.voters, owner), EAlreadyVotedPublic);
             table::add(&mut poll.voters, owner, vector[option_index]);
         }
     } else {
         let anon_id = anon.extract();
         assert!(weight == 1, EAnonWeightNotOne); //anonymous weight must always be 1
-		if (poll.poll_config.allow_multiple_choice) {
-
-			if (table::contains(&poll.anon_voters, anon_id)) {
+        assert!(poll.poll_config.allow_anon_vote, EAnonNotAllowed);
+        if (poll.poll_config.allow_multiple_choice) {
+            if (table::contains(&poll.anon_voters, anon_id)) {
                 let chosen = table::borrow_mut(&mut poll.anon_voters, anon_id);
                 assert!(!vector::contains(chosen, &option_index), EAlreadyVotedForOption);
                 vector::push_back(chosen, option_index);
-			} else {
-				table::add(&mut poll.anon_voters, anon_id, vector[option_index]); 
-			}
-
-		} else {
-	        assert!(!table::contains(&poll.anon_voters, anon_id), EAlreadyVotedAnon);
-			table::add(&mut poll.anon_voters, anon_id, vector[option_index]); 
-		}
+            } else {
+                table::add(&mut poll.anon_voters, anon_id, vector[option_index]);
+            }
+        } else {
+            assert!(!table::contains(&poll.anon_voters, anon_id), EAlreadyVotedAnon);
+            table::add(&mut poll.anon_voters, anon_id, vector[option_index]);
+        }
     };
 
     let count = table::borrow_mut<u64, u64>(&mut poll.votes, option_index);
