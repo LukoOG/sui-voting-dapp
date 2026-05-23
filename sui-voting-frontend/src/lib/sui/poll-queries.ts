@@ -2,7 +2,7 @@ import { useSuiClientQuery } from '@mysten/dapp-kit';
 
 import { useEffect, useState } from "react";
 
-const SUI_GRAPHQL_ENDPOINT = "https://graphql.testnet.sui.io/graphql"; 
+const SUI_GRAPHQL_ENDPOINT = "https://graphql.devnet.sui.io/graphql"; //switch back to tesnet eventually
 
 
 export function usePaginatedPolls(page: number, pageSize: number) {
@@ -27,7 +27,7 @@ export function usePaginatedPolls(page: number, pageSize: number) {
     objects(
       first: $first,
       after: $after,
-      filter: { type: "0x6f75ea7d244bb7127702e13f0f578fbede04c0a2844ca1a4571e6de58cc72d81::poll::Poll" }
+      filter: { type: "0x7dc3a0433436e6453ba3d766fa43b930ba098b79b38c24ba81a058bd9410edcc::poll::Poll" }
     ) {
       nodes {
 		  address

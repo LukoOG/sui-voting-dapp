@@ -15,7 +15,7 @@ export default function SuiLayoutProvider (
 ) {
     return(
     <QueryClientProvider client={queryClient}>
-        <SuiClientProvider networks={networks} defaultNetwork='testnet'>
+        <SuiClientProvider networks={networks} defaultNetwork='devnet'>
             <WalletProvider autoConnect={true}>
                 {children}
             </WalletProvider>
