@@ -1,5 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
-import { useSignAndExecuteTransaction, useSuiClient } from "@mysten/dapp-kit";
+import { useSignAndExecuteTransaction } from "@mysten/dapp-kit";
+import { graphqlClient } from "@/lib/sui/graphqlClient";
 import { createPollTx, votePollTx } from "@/lib/sui/suiTx";
 import { createPollArgs, votePollArgs } from "@/lib/types";
 
@@ -9,38 +10,37 @@ type votePollArgsT = votePollArgs & { address: string };
 
 export const usePollActions = () => {
     const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-    const suiClient = useSuiClient();
-	
-	const createPoll =  useMutation({
+
+	const createPoll = useMutation({
 		mutationFn: async (args: createPollArgsT) => {
 			console.log(args)
 			const tx = createPollTx(args);
-			
+
 			const result = await signAndExecuteTransaction({ transaction: tx });
-			await suiClient.waitForTransaction({ digest: result.digest });
+			await graphqlClient.core.waitForTransaction({ digest: result.digest });
 
 			return result;
 		},
-		
+
 		onSuccess: () => {},
 		onError: () => {},
 	});
-	
+
 	const walletVote = useMutation({
 		mutationFn: async (args: votePollArgsT) => {
 			console.log("inside wallet vote", args)
 			const tx = votePollTx(args);
 			console.log("inside wallet vote", tx)
-			
+
 			const result = await signAndExecuteTransaction({ transaction: tx });
-			await suiClient.waitForTransaction({ digest: result.digest });
+			await graphqlClient.core.waitForTransaction({ digest: result.digest });
 
 			return result;
 		},
-		
+
 		onSuccess: () => {},
 		onError: () => {},
-	})
-	
+	});
+
 	return { createPoll, walletVote };
 }

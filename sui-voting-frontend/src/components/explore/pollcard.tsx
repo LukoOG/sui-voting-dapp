@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 
 //export for image preview
 export interface PollOption {
-  id: string;
-  name: string;
+  id?: string;
+  name?: string;
   text?: string;
   caption?: string;
   image_url?: string;
@@ -26,10 +26,12 @@ interface PollCardProps {
     description: string;
     thumbnail_url: string;
     creator: string;
-    close_time: number;
+    /** Millisecond timestamp — may arrive as a string-encoded u64 from on-chain */
+    close_time: number | string;
     options: PollOption[];
-    voters: { size: number };
-    anon_voters: { size: number };
+    /** size is a string-encoded u64 from the on-chain Table */
+    voters: { size: number | string };
+    anon_voters: { size: number | string };
     poll_config: PollConfig;
   };
   index: number;

@@ -21,8 +21,8 @@ export function getPreviewImages(
   return mapped.slice(0, 3);
 }
 
-export function formatTimeRemaining(closeTime: number) {
-  const diff = closeTime - Date.now();
+export function formatTimeRemaining(closeTime: number | string) {
+  const diff = Number(closeTime) - Date.now();
   if (diff <= 0) return "Ended";
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));

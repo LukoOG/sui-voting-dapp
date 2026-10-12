@@ -21,52 +21,60 @@ export interface votePollArgs {
 	weight: number,
 };
 
-interface SuiTable<T = unknown> {
-  type: string;
-  fields: T;
-}
-
-interface SuiId {
+/**
+ * Flat table reference as returned by the Sui GraphQL JSON representation.
+ * The `size` field is a string-encoded u64 on-chain.
+ */
+interface SuiTableRef {
   id: string;
+  size: string;
 }
 
-interface PollConfigFields {
+/**
+ * Poll configuration as returned by asMoveObject.contents.json.
+ * GraphQL unwraps Move structs into plain flat objects — no { type, fields }
+ * envelope.
+ */
+interface PollConfig {
   allow_anon_vote: boolean;
   allow_multiple_choice: boolean;
   allow_weighted: boolean;
 }
 
-interface PollConfig {
-  type: string;
-  fields: PollConfigFields;
-}
-
-interface PollOptionFields {
-  id: string;
+/**
+ * A single poll option as returned by asMoveObject.contents.json.
+ */
+interface PollOption {
+  id?: string;
   name?: string;
   caption?: string;
   image_url?: string;
 }
 
-interface PollOption {
-  type: string;
-  fields: PollOptionFields;
-}
-
+/**
+ * Full Poll object shape as returned by asMoveObject.contents.json via the
+ * Sui GraphQL API.
+ *
+ * Key differences from the old JSON-RPC showContent shape:
+ *  - `id` is a plain address string, not `{ id: string }`
+ *  - `options` items are flat objects, not `{ type, fields: { … } }`
+ *  - `poll_config` is a flat object, not `{ type, fields: { … } }`
+ *  - `voters.size` / `anon_voters.size` are string-encoded u64 values
+ */
 export interface PollFields {
-  anon_voters: SuiTable<{ size: number }>;
-  close_time: string;
-  creator: string;
+  id: string;
+  poll_id: string;
+  title: string;
   description: string;
-  id: SuiId;
+  thumbnail_url: string;
+  creator: string;
   is_active: boolean;
+  start_time: string;
+  close_time: string;
+  category?: string;
   options: PollOption[];
   poll_config: PollConfig;
-  poll_id: string;
-  start_time: string;
-  thumbnail_url: string;
-  title: string;
-  voters: SuiTable<{ size: number }>;
-  votes: SuiTable;
-  category?: string;
+  voters: SuiTableRef;
+  anon_voters: SuiTableRef;
+  votes: SuiTableRef;
 }

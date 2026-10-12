@@ -1,5 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { PollFields } from "@/lib/types";
+/**
+ * parsePoll.ts
+ *
+ * Pure parsing utilities that convert raw Move object JSON into typed
+ * application-level data structures.
+ *
+ * Migration summary
+ * -----------------
+ * BEFORE: fetchVoteCounts / parsePollWithVotes accepted `suiClient: any` and
+ *         called the JSON-RPC `getDynamicFields` / `getDynamicFieldObject`
+ *         methods directly, leading to N+1 RPC calls and loss of type safety.
+ *
+ * AFTER:  The two helpers now accept a pre-resolved Map<number, number>
+ *         produced by the single GraphQL query in usePollWithVotes / graphqlClient.
+ *         No RPC calls are made here — this file is pure data transformation.
+ */
+
+import type { PollFields } from "@/lib/types";
+
+// ---------------------------------------------------------------------------
+// Public types
+// ---------------------------------------------------------------------------
 
 export type PollPreview = {
   id: string;
@@ -47,172 +67,111 @@ export interface ParsedPoll {
   is_active: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Core parser
+// ---------------------------------------------------------------------------
+
 /**
- * Parse poll data from Sui GraphQL response
- * Handles the nested structure of Sui Move objects
+ * Parse poll data from a raw Sui Move object JSON response.
+ * Vote counts are initialised to 0; populate them with `applyVoteCounts`.
  */
 export function parsePollFromSui(fields: PollFields): ParsedPoll {
-  // Parse poll configuration
+  // GraphQL returns poll_config as a flat object — no .fields wrapper
   const config: ParsedPollConfig = {
-    allowAnonymous: fields.poll_config?.fields?.allow_anon_vote ?? false,
-    allowMultiple: fields.poll_config?.fields?.allow_multiple_choice ?? false,
-    weightedVotes: fields.poll_config?.fields?.allow_weighted ?? false,
+    allowAnonymous: fields.poll_config?.allow_anon_vote ?? false,
+    allowMultiple: fields.poll_config?.allow_multiple_choice ?? false,
+    weightedVotes: fields.poll_config?.allow_weighted ?? false,
   };
 
-  // Parse options with vote counts
-  const options: ParsedPollOption[] = (fields.options || []).map(
-    (option, index) => {
-      const optionFields = option.fields;
-
-      return {
-        id: String(index), // Use index as ID for consistency
-        text: optionFields.name || `Option ${index + 1}`,
-        name: optionFields.name || `Option ${index + 1}`,
-        votes: 0, // Will be populated from votes table
-        image: optionFields.image_url || undefined,
-        caption: optionFields.caption || undefined,
-      };
-    },
+  // GraphQL returns options as flat objects — no .fields wrapper
+  const options: ParsedPollOption[] = (fields.options ?? []).map(
+    (option, index) => ({
+      id: String(index),
+      text: option.name ?? `Option ${index + 1}`,
+      name: option.name ?? `Option ${index + 1}`,
+      votes: 0,
+      image: option.image_url ?? undefined,
+      caption: option.caption ?? undefined,
+    }),
   );
 
-  // Calculate total votes from the votes table
-  // The votes table is a Sui Table<u64, u64> mapping option_index -> vote_count
-  const totalVotes = 0;
-
-  // Note: Sui Tables in GraphQL don't expose their contents directly
-  // You need to query them separately or use dynamic fields
-  // For now, we'll set votes to 0 and you'll need to fetch them via dynamic fields
-
-  // Parse timestamps
-  const closeTime = fields.close_time;
-  const startTime = fields.start_time;
-
-  // Create ISO date string for endsAt
-  const endsAt = new Date(parseInt(closeTime)).toISOString();
+  const endsAt = new Date(parseInt(fields.close_time)).toISOString();
 
   return {
     id: parseInt(fields.poll_id),
-    objectId: fields.id.id,
+    // GraphQL returns id as a plain address string, not { id: string }
+    objectId: fields.id,
     title: fields.title,
     image: fields.thumbnail_url,
-    totalVotes,
+    totalVotes: 0,
     creator: fields.creator,
-    category: fields.category || "General",
-    description: fields.description || undefined,
+    category: fields.category ?? "General",
+    description: fields.description ?? undefined,
     options,
     config,
     endsAt,
-    close_time: closeTime,
-    start_time: startTime,
+    close_time: fields.close_time,
+    start_time: fields.start_time,
     is_active: fields.is_active,
   };
 }
 
+// ---------------------------------------------------------------------------
+// Vote-count helpers (no RPC calls — accept pre-resolved data)
+// ---------------------------------------------------------------------------
+
 /**
- * Fetch vote counts from Sui Table using dynamic fields
- * This is necessary because Sui Tables don't expose their contents in the main query
+ * Merge a pre-resolved vote-count map into an already-parsed poll.
+ *
+ * `voteCounts` is a `Map<optionIndex, count>` produced by
+ * `parseVoteCountsFromDynamicFields` in `usePollWithVotes`.
  */
-export async function fetchVoteCounts(
-  pollObjectId: string,
-  optionCount: number,
-  suiClient: any,
-): Promise<Map<number, number>> {
-  const voteCounts = new Map<number, number>();
-
-  try {
-    // Query dynamic fields for the votes table
-    const dynamicFields = await suiClient.getDynamicFields({
-      parentId: pollObjectId,
-    });
-
-    // Parse vote counts from dynamic fields
-    for (let i = 0; i < optionCount; i++) {
-      // Find the dynamic field for this option index
-      const voteField = dynamicFields.data.find((field: any) => {
-        // The field name should match the option index
-        return field.name?.value === String(i);
-      });
-
-      if (voteField) {
-        // Fetch the actual vote count
-        const voteData = await suiClient.getDynamicFieldObject({
-          parentId: pollObjectId,
-          name: {
-            type: "u64",
-            value: String(i),
-          },
-        });
-
-        const voteCount = parseInt(
-          voteData?.data?.content?.fields?.value || "0",
-        );
-        voteCounts.set(i, voteCount);
-      } else {
-        voteCounts.set(i, 0);
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching vote counts:", error);
-    // Return empty map on error
-  }
-
-  return voteCounts;
+export function applyVoteCounts(
+  poll: ParsedPoll,
+  voteCounts: Map<number, number>,
+): ParsedPoll {
+  let totalVotes = 0;
+  const options = poll.options.map((option, index) => {
+    const votes = voteCounts.get(index) ?? 0;
+    totalVotes += votes;
+    return { ...option, votes };
+  });
+  return { ...poll, options, totalVotes };
 }
 
 /**
- * Enhanced parser that includes vote counts
- * Use this when you have access to the Sui client
+ * Convenience wrapper: parse a poll and immediately apply vote counts.
+ *
+ * @param fields     - raw PollFields from the GraphQL JSON response
+ * @param voteCounts - Map<optionIndex, voteCount> resolved from dynamic fields
  */
-export async function parsePollWithVotes(
+export function parsePollWithVotes(
   fields: PollFields,
-  suiClient: any,
-): Promise<ParsedPoll> {
-  const poll = parsePollFromSui(fields);
-
-  try {
-    // Fetch vote counts for each option
-    const voteCounts = await fetchVoteCounts(
-      poll.objectId,
-      poll.options.length,
-      suiClient,
-    );
-
-    // Update options with vote counts
-    let totalVotes = 0;
-    poll.options = poll.options.map((option, index) => {
-      const votes = voteCounts.get(index) || 0;
-      totalVotes += votes;
-      return {
-        ...option,
-        votes,
-      };
-    });
-
-    poll.totalVotes = totalVotes;
-  } catch (error) {
-    console.error("Error parsing poll with votes:", error);
-  }
-
-  return poll;
+  voteCounts: Map<number, number>,
+): ParsedPoll {
+  return applyVoteCounts(parsePollFromSui(fields), voteCounts);
 }
 
+// ---------------------------------------------------------------------------
+// Preview parser (for list/card views — no vote counts needed)
+// ---------------------------------------------------------------------------
+
 /**
- * Parse poll preview for list views (without detailed vote counts)
+ * Parse a lightweight poll preview from raw fields.
+ * Suitable for card/list views where vote counts are shown as totals only.
  */
 export function parsePollPreview(fields: PollFields): PollPreview {
   return {
-    id: fields.id.id,
+    id: fields.id,
     pollId: parseInt(fields.poll_id),
     title: fields.title,
-    description: fields.description || undefined,
+    description: fields.description ?? undefined,
     thumbnailUrl: fields.thumbnail_url,
     creator: fields.creator,
     isActive: fields.is_active,
     startTime: parseInt(fields.start_time),
     closeTime: parseInt(fields.close_time),
-    optionCount: fields.options?.length || 0,
-    totalVotes: 0, // Will need separate query for accurate count
+    optionCount: fields.options?.length ?? 0,
+    totalVotes: 0,
   };
 }
-
-// Made with Bob
